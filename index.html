@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Breakout Arcade</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:
+  radial-gradient(circle,#111827,#050816);
+
+  overflow:hidden;
+
+  font-family:Arial,sans-serif;
+
+  color:white;
+
+  height:100vh;
+
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+/* =========================
+   MENU
+========================= */
+
+.menu{
+
+  position:absolute;
+
+  width:100%;
+  height:100%;
+
+  display:flex;
+
+  flex-direction:column;
+
+  justify-content:center;
+  align-items:center;
+
+  background:
+  rgba(0,0,0,0.9);
+
+  z-index:10;
+}
+
+.menu h1{
+
+  font-size:4rem;
+
+  color:#00e5ff;
+
+  margin-bottom:20px;
+
+  text-shadow:
+  0 0 10px #00e5ff,
+  0 0 20px #00e5ff,
+  0 0 40px #00e5ff;
+}
+
+.menu button{
+  width:250px;
+}
+
+/* =========================
+   RECORDS
+========================= */
+
+.records-panel{
+
+  display:none;
+
+  margin-top:20px;
+
+  width:320px;
+
+  background:#09131f;
+
+  border:2px solid #00e5ff;
+
+  border-radius:15px;
+
+  padding:20px;
+}
+
+.records-panel h2{
+
+  color:#00e5ff;
+
+  margin-bottom:15px;
+
+  text-align:center;
+}
+
+.records-panel li{
+
+  margin:8px 0;
+
+  color:#8ff0c8;
+}
+
+/* =========================
+   BOTONES
+========================= */
+
+button{
+
+  padding:14px 30px;
+
+  border:none;
+
+  border-radius:12px;
+
+  background:#8ff0c8;
+
+  color:#083b2d;
+
+  font-weight:bold;
+
+  cursor:pointer;
+
+  font-size:1rem;
+
+  transition:0.3s;
+
+  margin:10px;
+
+  box-shadow:
+  0 0 15px #8ff0c8;
+}
+
+button:hover{
+
+  transform:scale(1.05);
+
+  background:#b8ffe3;
+}
+
+/* =========================
+   HUD
+========================= */
+
+.game-container{
+
+  display:flex;
+
+  flex-direction:column;
+
+  align-items:center;
+}
+
+.hud{
+
+  width:800px;
+
+  display:flex;
+
+  justify-content:flex-start;
+
+  gap:30px;
+
+  align-items:center;
+
+  margin-bottom:15px;
+
+  color:#00e5ff;
+}
+
+/* =========================
+   VIDA
+========================= */
+
+.life-container{
+
+  width:220px;
+
+  height:20px;
+
+  background:#111;
+
+  border:2px solid #00e5ff;
+
+  border-radius:20px;
+
+  overflow:hidden;
+}
+
+.life-bar{
+
+  width:100%;
+
+  height:100%;
+
+  background:lime;
+
+  transition:0.3s;
+}
+
+/* =========================
+   CANVAS
+========================= */
+
+canvas{
+
+  background:black;
+
+  border:3px solid #00e5ff;
+
+  border-radius:10px;
+
+  box-shadow:
+  0 0 20px #00e5ff;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- MENU -->
+
+<div class="menu" id="menu">
+
+  <h1>BREAKOUT ARCADE</h1>
+
+  <button id="playBtn">
+    ▶️ INICIAR
+  </button>
+
+  <button id="recordsBtn">
+    🏆 RECORDS
+  </button>
+
+  <div
+  class="records-panel"
+  id="recordsPanel">
+
+    <h2>TOP 10</h2>
+
+    <ol id="recordsList"></ol>
+
+  </div>
+
+</div>
+
+<!-- GAME -->
+
+<div class="game-container">
+
+  <div class="hud">
+
+    <div>
+      ❤️ Vidas:
+      <span id="lives">3</span>
+    </div>
+
+    <div class="life-container">
+
+      <div
+      class="life-bar"
+      id="lifeBar">
+
+      </div>
+
+    </div>
+
+    <div>
+      ⭐ Score:
+      <span id="score">0</span>
+    </div>
+
+  </div>
+
+  <canvas
+  id="game"
+  width="800"
+  height="500">
+
+  </canvas>
+
+</div>
+
+<script>
+
+const canvas =
+document.getElementById("game");
+
+const ctx =
+canvas.getContext("2d");
+
+
+
+/* =========================
+   SONIDOS
+========================= */
+
+const coinSound =
+new Audio("Sounds/coin.mp3");
+
+const bubbleSound =
+new Audio("Sounds/burbuja.mp3");
+
+/* =========================
+   MENU
+========================= */
+
+const menu =
+document.getElementById("menu");
+
+const playBtn =
+document.getElementById("playBtn");
+
+const recordsBtn =
+document.getElementById("recordsBtn");
+
+const recordsPanel =
+document.getElementById("recordsPanel");
+
+const recordsList =
+document.getElementById("recordsList");
+
+/* =========================
+   HUD
+========================= */
+
+const scoreText =
+document.getElementById("score");
+
+const livesText =
+document.getElementById("lives");
+
+const lifeBar =
+document.getElementById("lifeBar");
+
+/* =========================
+   VARIABLES
+========================= */
+
+let score = 0;
+
+let lives = 3;
+
+let gameStarted = false;
+
+/* =========================
+   BARRA
+========================= */
+
+const paddle = {
+
+  width:120,
+
+  height:15,
+
+  x:340,
+
+  y:460,
+
+  speed:8,
+
+  color:"#00e5ff"
+};
+
+/* =========================
+   CONTROLES
+========================= */
+
+let rightPressed = false;
+
+let leftPressed = false;
+
+/* =========================
+   BLOQUES
+========================= */
+
+const brickRows = 3;
+
+const brickCols = 10;
+
+const brickWidth = 70;
+
+const brickHeight = 25;
+
+const brickPadding = 10;
+
+const brickOffsetTop = 50;
+
+const brickOffsetLeft = 25;
+
+let bricks = [];
+
+/* =========================
+   ITEMS ESPECIALES
+========================= */
+
+const cometBlocks = [];
+
+const doubleBlocks = [];
+
+/* ===== 7 COMETAS ===== */
+
+while(cometBlocks.length < 7){
+
+  let num =
+  Math.floor(Math.random()*30);
+
+  if(!cometBlocks.includes(num))
+    cometBlocks.push(num);
+}
+
+/* ===== 4 DOBLES ===== */
+
+while(doubleBlocks.length < 4){
+
+  let num =
+  Math.floor(Math.random()*30);
+
+  if(
+    !doubleBlocks.includes(num) &&
+    !cometBlocks.includes(num)
+  ){
+    doubleBlocks.push(num);
+  }
+}
+
+/* =========================
+   CREAR BLOQUES
+========================= */
+
+for(let c=0;c<brickCols;c++){
+
+  bricks[c]=[];
+
+  for(let r=0;r<brickRows;r++){
+
+    let index =
+    c * brickRows + r;
+
+    bricks[c][r]={
+
+      x:0,
+      y:0,
+
+      status:1,
+
+      type:
+      cometBlocks.includes(index)
+      ? "comet"
+      : doubleBlocks.includes(index)
+      ? "double"
+      : "normal"
+    };
+  }
+}
+
+/* =========================
+   PELOTAS
+========================= */
+
+let balls = [
+
+  {
+    x:400,
+    y:250,
+    radius:10,
+    speedX:3,
+    speedY:3
+  }
+];
+
+/* =========================
+   POWERUPS
+========================= */
+
+let powerups = [];
+
+/* =========================
+   RECORDS
+========================= */
+
+function saveRecord(name,score){
+
+  let records =
+  JSON.parse(
+    localStorage.getItem("records")
+  ) || [];
+
+  records.push({name,score});
+
+  records.sort((a,b)=>
+    b.score - a.score
+  );
+
+  records = records.slice(0,10);
+
+  localStorage.setItem(
+    "records",
+    JSON.stringify(records)
+  );
+}
+
+function showRecords(){
+
+  recordsPanel.style.display =
+  recordsPanel.style.display ===
+  "block"
+  ? "none"
+  : "block";
+
+  let records =
+  JSON.parse(
+    localStorage.getItem("records")
+  ) || [];
+
+  recordsList.innerHTML = "";
+
+  records.forEach(r=>{
+
+    const li =
+    document.createElement("li");
+
+    li.innerText =
+    `${r.name} - ${r.score}`;
+
+    recordsList.appendChild(li);
+  });
+}
+
+recordsBtn.addEventListener(
+"click",
+showRecords
+);
+
+/* =========================
+   INICIAR
+========================= */
+
+playBtn.addEventListener("click",()=>{
+
+  menu.style.display = "none";
+
+  gameStarted = true;
+});
+
+/* =========================
+   CONTROLES
+========================= */
+
+document.addEventListener("keydown",e=>{
+
+  if(e.key==="ArrowRight")
+    rightPressed=true;
+
+  if(e.key==="ArrowLeft")
+    leftPressed=true;
+});
+
+document.addEventListener("keyup",e=>{
+
+  if(e.key==="ArrowRight")
+    rightPressed=false;
+
+  if(e.key==="ArrowLeft")
+    leftPressed=false;
+});
+
+/* =========================
+   VIDA
+========================= */
+
+function updateLifeBar(){
+
+  lifeBar.style.width =
+  (lives/3)*100 + "%";
+}
+
+/* =========================
+   DIBUJAR BARRA
+========================= */
+
+function drawPaddle(){
+
+  ctx.fillStyle = paddle.color;
+
+  ctx.fillRect(
+
+    paddle.x,
+    paddle.y,
+
+    paddle.width,
+    paddle.height
+  );
+}
+
+/* =========================
+   DIBUJAR PELOTAS
+========================= */
+
+function drawBalls(){
+
+  balls.forEach(ball=>{
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+      ball.x,
+      ball.y,
+
+      ball.radius,
+
+      0,
+      Math.PI*2
+    );
+
+    ctx.fillStyle="white";
+
+    ctx.fill();
+
+    ctx.closePath();
+  });
+}
+
+/* =========================
+   DIBUJAR BLOQUES
+========================= */
+
+function drawBricks(){
+
+  for(let c=0;c<brickCols;c++){
+
+    for(let r=0;r<brickRows;r++){
+
+      if(bricks[c][r].status==1){
+
+        const brickX =
+        (c*(brickWidth+brickPadding))
+        + brickOffsetLeft;
+
+        const brickY =
+        (r*(brickHeight+brickPadding))
+        + brickOffsetTop;
+
+        bricks[c][r].x=brickX;
+        bricks[c][r].y=brickY;
+
+        if(bricks[c][r].type==="comet"){
+
+          ctx.fillStyle="#b026ff";
+
+        }else if(
+          bricks[c][r].type==="double"
+        ){
+
+          ctx.fillStyle="#00e5ff";
+
+        }else{
+
+          ctx.fillStyle="#ff3b3b";
+        }
+
+        ctx.fillRect(
+
+          brickX,
+          brickY,
+
+          brickWidth,
+          brickHeight
+        );
+
+        ctx.fillStyle="white";
+
+        ctx.font="18px Arial";
+
+        if(bricks[c][r].type==="comet"){
+
+          ctx.fillText(
+            "☄️",
+            brickX+22,
+            brickY+18
+          );
+
+        }else if(
+          bricks[c][r].type==="double"
+        ){
+
+          ctx.fillText(
+            "⚪⚪",
+            brickX+12,
+            brickY+18
+          );
+        }
+      }
+    }
+  }
+}
+
+/* =========================
+   POWERUPS
+========================= */
+
+function drawPowerups(){
+
+  powerups.forEach(p=>{
+
+    ctx.font="28px Arial";
+
+    ctx.fillText(
+      p.icon,
+      p.x,
+      p.y
+    );
+  });
+}
+
+/* =========================
+   UPDATE
+========================= */
+
+function update(){
+
+  if(!gameStarted) return;
+
+  /* ===== BARRA ===== */
+
+  if(
+    rightPressed &&
+    paddle.x+paddle.width<canvas.width
+  ){
+
+    paddle.x += paddle.speed;
+  }
+
+  if(
+    leftPressed &&
+    paddle.x>0
+  ){
+
+    paddle.x -= paddle.speed;
+  }
+
+  /* ===== PELOTAS ===== */
+
+  balls.forEach(ball=>{
+
+    ball.x += ball.speedX;
+
+    ball.y += ball.speedY;
+
+    /* ===== PAREDES ===== */
+
+    if(
+      ball.x+ball.radius>canvas.width ||
+      ball.x-ball.radius<0
+    ){
+
+      ball.speedX *= -1;
+    }
+
+    if(ball.y-ball.radius<0){
+
+      ball.speedY *= -1;
+    }
+
+    /* ===== BARRA ===== */
+
+    if(
+
+      ball.y + ball.radius >
+      paddle.y &&
+
+      ball.x > paddle.x &&
+
+      ball.x < paddle.x+paddle.width &&
+
+      ball.speedY > 0
+
+    ){
+
+      ball.speedY =
+      -Math.abs(ball.speedY);
+
+      ball.y =
+      paddle.y-ball.radius;
+
+      bubbleSound.currentTime = 0;
+
+      bubbleSound.play();
+
+      score++;
+
+      scoreText.innerText=score;
+
+      /* ===== CADA 5 PUNTOS ===== */
+
+      if(score % 5 === 0){
+
+        paddle.width *= 1.02;
+
+        const colors = [
+
+          "#ffbf00",
+          "#00e5ff",
+          "#ff3b3b",
+          "#8a2be2",
+          "#00ff99",
+          "#ff66cc",
+          "#ffffff"
+        ];
+
+        paddle.color =
+
+        colors[
+          Math.floor(
+            Math.random()*colors.length
+          )
+        ];
+
+        balls.forEach(b=>{
+
+          if(Math.abs(b.speedX) < 15){
+
+            b.speedX *= 1.01;
+          }
+
+          if(Math.abs(b.speedY) < 15){
+
+            b.speedY *= 1.01;
+          }
+
+        });
+      }
+
+      /* ===== CADA 20 PUNTOS ===== */
+
+      if(score % 20 === 0){
+
+        const newBalls = [];
+
+        balls.forEach(b=>{
+
+          newBalls.push({
+
+            x:b.x,
+            y:b.y,
+
+            radius:b.radius,
+
+            speedX:-b.speedX,
+
+            speedY:b.speedY
+          });
+        });
+
+        balls.push(...newBalls);
+      }
+    }
+
+    /* ===== BLOQUES ===== */
+
+    for(let c=0;c<brickCols;c++){
+
+      for(let r=0;r<brickRows;r++){
+
+        let b=bricks[c][r];
+
+        if(b.status==1){
+
+          if(
+
+            ball.x>b.x &&
+            ball.x<b.x+brickWidth &&
+
+            ball.y>b.y &&
+            ball.y<b.y+brickHeight
+
+          ){
+
+            ball.speedY *= -1;
+
+            b.status=0;
+
+            /* ===== COMETA ===== */
+
+            if(b.type==="comet"){
+
+              powerups.push({
+
+                x:b.x,
+                y:b.y,
+
+                type:"comet",
+
+                icon:"☄️"
+              });
+            }
+
+            /* ===== DOBLE ===== */
+
+            if(b.type==="double"){
+
+              balls.push({
+
+                x:ball.x,
+                y:ball.y,
+
+                radius:10,
+
+                speedX:-ball.speedX,
+
+                speedY:ball.speedY
+              });
+            }
+          }
+        }
+      }
+    }
+
+    /* ===== PERDER VIDA ===== */
+
+    if(ball.y > canvas.height){
+
+      lives--;
+
+      livesText.innerText=lives;
+
+      updateLifeBar();
+
+      ball.x=400;
+      ball.y=250;
+
+      ball.speedX=3;
+      ball.speedY=3;
+
+      if(lives<=0){
+
+        let playerName = "";
+
+        while(playerName.trim() === ""){
+
+          playerName = prompt(
+            "GAME OVER\nIngresa tu nombre:"
+          );
+
+          if(playerName === null){
+
+            playerName = "";
+          }
+        }
+
+        saveRecord(
+          playerName,
+          score
+        );
+
+        location.reload();
+      }
+    }
+
+  });
+
+  /* ===== POWERUPS ===== */
+
+  powerups.forEach((p,index)=>{
+
+    p.y += 3;
+
+    if(
+
+      p.y > paddle.y &&
+
+      p.x > paddle.x &&
+
+      p.x < paddle.x+paddle.width
+
+    ){
+
+      paddle.width *= 1.15;
+
+      /* CAMBIAR COLOR */
+
+      const cometColors = [
+
+        "#00e5ff",
+        "#8a2be2",
+        "#ff66cc",
+        "#00ff99",
+        "#ffbf00",
+        "#ffffff"
+
+      ];
+
+      paddle.color =
+
+      cometColors[
+        Math.floor(
+          Math.random()*cometColors.length
+        )
+      ];
+
+      /* SONIDO */
+
+      coinSound.currentTime = 0;
+
+      coinSound.play();
+
+      powerups.splice(index,1);
+    }
+  });
+
+}
+
+/* =========================
+   LOOP
+========================= */
+
+function gameLoop(){
+
+  ctx.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  drawPaddle();
+
+  drawBalls();
+
+  drawBricks();
+
+  drawPowerups();
+
+  update();
+
+  requestAnimationFrame(gameLoop);
+}
+
+updateLifeBar();
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
