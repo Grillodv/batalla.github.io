@@ -241,7 +241,7 @@ canvas{
 @media(max-width:768px){
 
   .menu h1{
-    font-size:2.3rem;
+    font-size:2.2rem;
   }
 
   .hud{
@@ -344,6 +344,15 @@ const ctx =
 canvas.getContext("2d");
 
 /* =========================
+   MOVIL
+========================= */
+
+const isMobile =
+/Android|iPhone|iPad|iPod/i.test(
+navigator.userAgent
+);
+
+/* =========================
    SONIDOS
 ========================= */
 
@@ -401,7 +410,7 @@ let gameStarted = false;
 
 const paddle = {
 
-  width:120,
+  width:isMobile ? 160 : 120,
 
   height:15,
 
@@ -409,7 +418,7 @@ const paddle = {
 
   y:460,
 
-  speed:8,
+  speed:isMobile ? 5 : 8,
 
   color:"#00e5ff"
 };
@@ -463,7 +472,7 @@ while(cometBlocks.length < 7){
   }
 }
 
-/* ===== 4 PELOTAS DOBLES ===== */
+/* ===== 4 DOBLES ===== */
 
 while(doubleBlocks.length < 4){
 
@@ -519,8 +528,10 @@ let balls = [
     x:400,
     y:250,
     radius:10,
-    speedX:3,
-    speedY:3
+
+    speedX:isMobile ? 2 : 3,
+
+    speedY:isMobile ? 2 : 3
   }
 ];
 
@@ -624,8 +635,10 @@ document.addEventListener("keyup",e=>{
 });
 
 /* =========================
-   MOVIL
+   TOUCH MOVIL
 ========================= */
+
+let targetX = paddle.x;
 
 canvas.addEventListener(
 "touchmove",
@@ -637,20 +650,8 @@ e=>{
   const touchX =
   e.touches[0].clientX - rect.left;
 
-  paddle.x =
-  touchX - paddle.width/2;
-
-  if(paddle.x < 0)
-    paddle.x = 0;
-
-  if(
-    paddle.x + paddle.width >
-    canvas.width
-  ){
-
-    paddle.x =
-    canvas.width - paddle.width;
-  }
+  targetX =
+  touchX - paddle.width / 2;
 
   e.preventDefault();
 
@@ -767,14 +768,12 @@ function drawBricks(){
 
         ctx.font="18px Arial";
 
-        /* ===== ICONOS ===== */
-
         if(b.type==="comet"){
 
           ctx.fillText(
             "☄️",
-            brickX + 22,
-            brickY + 18
+            brickX+22,
+            brickY+18
           );
         }
 
@@ -782,8 +781,8 @@ function drawBricks(){
 
           ctx.fillText(
             "⚪⚪",
-            brickX + 12,
-            brickY + 18
+            brickX+12,
+            brickY+18
           );
         }
       }
@@ -802,11 +801,8 @@ function drawPowerups(){
     ctx.font="28px Arial";
 
     ctx.fillText(
-
       p.icon,
-
       p.x,
-
       p.y
     );
   });
@@ -820,7 +816,29 @@ function update(){
 
   if(!gameStarted) return;
 
-  /* ===== MOVIMIENTO ===== */
+  /* ===== MOVIL SUAVE ===== */
+
+  if(isMobile){
+
+    paddle.x +=
+    (targetX - paddle.x) * 0.18;
+
+    if(paddle.x < 0){
+
+      paddle.x = 0;
+    }
+
+    if(
+      paddle.x + paddle.width >
+      canvas.width
+    ){
+
+      paddle.x =
+      canvas.width - paddle.width;
+    }
+  }
+
+  /* ===== PC ===== */
 
   if(
     rightPressed &&
@@ -918,9 +936,15 @@ function update(){
 
         balls.forEach(b=>{
 
-          b.speedX *= 1.01;
+          if(Math.abs(b.speedX)<10){
 
-          b.speedY *= 1.01;
+            b.speedX *= 1.01;
+          }
+
+          if(Math.abs(b.speedY)<10){
+
+            b.speedY *= 1.01;
+          }
         });
       }
 
@@ -942,7 +966,7 @@ function update(){
       }
     }
 
-    /* ===== COLISION BLOQUES ===== */
+    /* ===== BLOQUES ===== */
 
     for(let c=0;c<brickCols;c++){
 
@@ -964,7 +988,7 @@ function update(){
 
             ball.speedY *= -1;
 
-            b.status = 0;
+            b.status=0;
 
             /* ===== COMETA ===== */
 
@@ -972,8 +996,8 @@ function update(){
 
               powerups.push({
 
-                x:b.x + 20,
-                y:b.y + 20,
+                x:b.x+20,
+                y:b.y+20,
 
                 icon:"☄️"
               });
@@ -1013,8 +1037,9 @@ function update(){
       ball.x=400;
       ball.y=250;
 
-      ball.speedX=3;
-      ball.speedY=3;
+      ball.speedX=isMobile ? 2 : 3;
+
+      ball.speedY=isMobile ? 2 : 3;
 
       if(lives<=0){
 
@@ -1095,10 +1120,8 @@ function update(){
 function gameLoop(){
 
   ctx.clearRect(
-
     0,
     0,
-
     canvas.width,
     canvas.height
   );
