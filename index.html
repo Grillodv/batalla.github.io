@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>Breakout Arcade</title>
 
@@ -15,6 +19,7 @@
 }
 
 body{
+
   background:
   radial-gradient(circle,#111827,#050816);
 
@@ -24,7 +29,7 @@ body{
 
   color:white;
 
-  height:100vh;
+  min-height:100vh;
 
   display:flex;
   justify-content:center;
@@ -37,7 +42,7 @@ body{
 
 .menu{
 
-  position:absolute;
+  position:fixed;
 
   width:100%;
   height:100%;
@@ -50,9 +55,11 @@ body{
   align-items:center;
 
   background:
-  rgba(0,0,0,0.9);
+  rgba(0,0,0,0.92);
 
   z-index:10;
+
+  padding:20px;
 }
 
 .menu h1{
@@ -63,19 +70,13 @@ body{
 
   margin-bottom:20px;
 
+  text-align:center;
+
   text-shadow:
   0 0 10px #00e5ff,
   0 0 20px #00e5ff,
   0 0 40px #00e5ff;
 }
-
-.menu button{
-  width:250px;
-}
-
-/* =========================
-   RECORDS
-========================= */
 
 .records-panel{
 
@@ -96,11 +97,11 @@ body{
 
 .records-panel h2{
 
-  color:#00e5ff;
+  text-align:center;
 
   margin-bottom:15px;
 
-  text-align:center;
+  color:#00e5ff;
 }
 
 .records-panel li{
@@ -148,42 +149,48 @@ button:hover{
 }
 
 /* =========================
-   HUD
+   GAME
 ========================= */
 
 .game-container{
+
+  width:100%;
+
+  max-width:900px;
 
   display:flex;
 
   flex-direction:column;
 
   align-items:center;
+
+  padding:10px;
 }
 
 .hud{
 
-  width:800px;
+  width:100%;
+
+  max-width:800px;
 
   display:flex;
 
-  justify-content:flex-start;
-
-  gap:30px;
+  justify-content:space-between;
 
   align-items:center;
 
+  gap:15px;
+
   margin-bottom:15px;
+
+  flex-wrap:wrap;
 
   color:#00e5ff;
 }
 
-/* =========================
-   VIDA
-========================= */
-
 .life-container{
 
-  width:220px;
+  width:200px;
 
   height:20px;
 
@@ -207,10 +214,6 @@ button:hover{
   transition:0.3s;
 }
 
-/* =========================
-   CANVAS
-========================= */
-
 canvas{
 
   background:black;
@@ -221,6 +224,43 @@ canvas{
 
   box-shadow:
   0 0 20px #00e5ff;
+
+  width:100%;
+
+  max-width:800px;
+
+  height:auto;
+
+  touch-action:none;
+}
+
+/* =========================
+   MOVIL
+========================= */
+
+@media(max-width:768px){
+
+  .menu h1{
+    font-size:2.3rem;
+  }
+
+  .hud{
+
+    justify-content:center;
+
+    text-align:center;
+  }
+
+  .life-container{
+    width:140px;
+  }
+
+  button{
+
+    width:220px;
+
+    font-size:0.9rem;
+  }
 }
 
 </style>
@@ -293,13 +333,15 @@ canvas{
 
 <script>
 
+/* =========================
+   CANVAS
+========================= */
+
 const canvas =
 document.getElementById("game");
 
 const ctx =
 canvas.getContext("2d");
-
-
 
 /* =========================
    SONIDOS
@@ -415,11 +457,13 @@ while(cometBlocks.length < 7){
   let num =
   Math.floor(Math.random()*30);
 
-  if(!cometBlocks.includes(num))
+  if(!cometBlocks.includes(num)){
+
     cometBlocks.push(num);
+  }
 }
 
-/* ===== 4 DOBLES ===== */
+/* ===== 4 PELOTAS DOBLES ===== */
 
 while(doubleBlocks.length < 4){
 
@@ -430,6 +474,7 @@ while(doubleBlocks.length < 4){
     !doubleBlocks.includes(num) &&
     !cometBlocks.includes(num)
   ){
+
     doubleBlocks.push(num);
   }
 }
@@ -513,9 +558,12 @@ function saveRecord(name,score){
 function showRecords(){
 
   recordsPanel.style.display =
+
   recordsPanel.style.display ===
   "block"
+
   ? "none"
+
   : "block";
 
   let records =
@@ -554,7 +602,7 @@ playBtn.addEventListener("click",()=>{
 });
 
 /* =========================
-   CONTROLES
+   TECLADO
 ========================= */
 
 document.addEventListener("keydown",e=>{
@@ -576,6 +624,39 @@ document.addEventListener("keyup",e=>{
 });
 
 /* =========================
+   MOVIL
+========================= */
+
+canvas.addEventListener(
+"touchmove",
+e=>{
+
+  const rect =
+  canvas.getBoundingClientRect();
+
+  const touchX =
+  e.touches[0].clientX - rect.left;
+
+  paddle.x =
+  touchX - paddle.width/2;
+
+  if(paddle.x < 0)
+    paddle.x = 0;
+
+  if(
+    paddle.x + paddle.width >
+    canvas.width
+  ){
+
+    paddle.x =
+    canvas.width - paddle.width;
+  }
+
+  e.preventDefault();
+
+},{passive:false});
+
+/* =========================
    VIDA
 ========================= */
 
@@ -586,12 +667,13 @@ function updateLifeBar(){
 }
 
 /* =========================
-   DIBUJAR BARRA
+   BARRA
 ========================= */
 
 function drawPaddle(){
 
-  ctx.fillStyle = paddle.color;
+  ctx.fillStyle =
+  paddle.color;
 
   ctx.fillRect(
 
@@ -604,7 +686,7 @@ function drawPaddle(){
 }
 
 /* =========================
-   DIBUJAR PELOTAS
+   PELOTAS
 ========================= */
 
 function drawBalls(){
@@ -633,7 +715,7 @@ function drawBalls(){
 }
 
 /* =========================
-   DIBUJAR BLOQUES
+   BLOQUES
 ========================= */
 
 function drawBricks(){
@@ -642,7 +724,9 @@ function drawBricks(){
 
     for(let r=0;r<brickRows;r++){
 
-      if(bricks[c][r].status==1){
+      let b = bricks[c][r];
+
+      if(b.status==1){
 
         const brickX =
         (c*(brickWidth+brickPadding))
@@ -652,15 +736,15 @@ function drawBricks(){
         (r*(brickHeight+brickPadding))
         + brickOffsetTop;
 
-        bricks[c][r].x=brickX;
-        bricks[c][r].y=brickY;
+        b.x = brickX;
+        b.y = brickY;
 
-        if(bricks[c][r].type==="comet"){
+        if(b.type==="comet"){
 
           ctx.fillStyle="#b026ff";
 
         }else if(
-          bricks[c][r].type==="double"
+          b.type==="double"
         ){
 
           ctx.fillStyle="#00e5ff";
@@ -683,22 +767,23 @@ function drawBricks(){
 
         ctx.font="18px Arial";
 
-        if(bricks[c][r].type==="comet"){
+        /* ===== ICONOS ===== */
+
+        if(b.type==="comet"){
 
           ctx.fillText(
             "☄️",
-            brickX+22,
-            brickY+18
+            brickX + 22,
+            brickY + 18
           );
+        }
 
-        }else if(
-          bricks[c][r].type==="double"
-        ){
+        if(b.type==="double"){
 
           ctx.fillText(
             "⚪⚪",
-            brickX+12,
-            brickY+18
+            brickX + 12,
+            brickY + 18
           );
         }
       }
@@ -717,8 +802,11 @@ function drawPowerups(){
     ctx.font="28px Arial";
 
     ctx.fillText(
+
       p.icon,
+
       p.x,
+
       p.y
     );
   });
@@ -732,7 +820,7 @@ function update(){
 
   if(!gameStarted) return;
 
-  /* ===== BARRA ===== */
+  /* ===== MOVIMIENTO ===== */
 
   if(
     rightPressed &&
@@ -773,16 +861,18 @@ function update(){
       ball.speedY *= -1;
     }
 
-    /* ===== BARRA ===== */
+    /* ===== REBOTE BARRA ===== */
 
     if(
 
       ball.y + ball.radius >
       paddle.y &&
 
-      ball.x > paddle.x &&
+      ball.x >
+      paddle.x &&
 
-      ball.x < paddle.x+paddle.width &&
+      ball.x <
+      paddle.x+paddle.width &&
 
       ball.speedY > 0
 
@@ -802,7 +892,7 @@ function update(){
 
       scoreText.innerText=score;
 
-      /* ===== CADA 5 PUNTOS ===== */
+      /* ===== CADA 5 ===== */
 
       if(score % 5 === 0){
 
@@ -815,8 +905,7 @@ function update(){
           "#ff3b3b",
           "#8a2be2",
           "#00ff99",
-          "#ff66cc",
-          "#ffffff"
+          "#ff66cc"
         ];
 
         paddle.color =
@@ -829,67 +918,53 @@ function update(){
 
         balls.forEach(b=>{
 
-          if(Math.abs(b.speedX) < 15){
+          b.speedX *= 1.01;
 
-            b.speedX *= 1.01;
-          }
-
-          if(Math.abs(b.speedY) < 15){
-
-            b.speedY *= 1.01;
-          }
-
+          b.speedY *= 1.01;
         });
       }
 
-      /* ===== CADA 20 PUNTOS ===== */
+      /* ===== CADA 20 ===== */
 
       if(score % 20 === 0){
 
-        const newBalls = [];
+        balls.push({
 
-        balls.forEach(b=>{
+          x:ball.x,
+          y:ball.y,
 
-          newBalls.push({
+          radius:10,
 
-            x:b.x,
-            y:b.y,
+          speedX:-ball.speedX,
 
-            radius:b.radius,
-
-            speedX:-b.speedX,
-
-            speedY:b.speedY
-          });
+          speedY:ball.speedY
         });
-
-        balls.push(...newBalls);
       }
     }
 
-    /* ===== BLOQUES ===== */
+    /* ===== COLISION BLOQUES ===== */
 
     for(let c=0;c<brickCols;c++){
 
       for(let r=0;r<brickRows;r++){
 
-        let b=bricks[c][r];
+        let b = bricks[c][r];
 
         if(b.status==1){
 
           if(
 
-            ball.x>b.x &&
-            ball.x<b.x+brickWidth &&
+            ball.x + ball.radius > b.x &&
+            ball.x - ball.radius < b.x + brickWidth &&
 
-            ball.y>b.y &&
-            ball.y<b.y+brickHeight
+            ball.y + ball.radius > b.y &&
+            ball.y - ball.radius < b.y + brickHeight
 
           ){
 
             ball.speedY *= -1;
 
-            b.status=0;
+            b.status = 0;
 
             /* ===== COMETA ===== */
 
@@ -897,10 +972,8 @@ function update(){
 
               powerups.push({
 
-                x:b.x,
-                y:b.y,
-
-                type:"comet",
+                x:b.x + 20,
+                y:b.y + 20,
 
                 icon:"☄️"
               });
@@ -947,15 +1020,15 @@ function update(){
 
         let playerName = "";
 
-        while(playerName.trim() === ""){
+        while(playerName.trim()===""){
 
           playerName = prompt(
             "GAME OVER\nIngresa tu nombre:"
           );
 
-          if(playerName === null){
+          if(playerName===null){
 
-            playerName = "";
+            playerName="";
           }
         }
 
@@ -988,8 +1061,6 @@ function update(){
 
       paddle.width *= 1.15;
 
-      /* CAMBIAR COLOR */
-
       const cometColors = [
 
         "#00e5ff",
@@ -998,7 +1069,6 @@ function update(){
         "#00ff99",
         "#ffbf00",
         "#ffffff"
-
       ];
 
       paddle.color =
@@ -1009,8 +1079,6 @@ function update(){
         )
       ];
 
-      /* SONIDO */
-
       coinSound.currentTime = 0;
 
       coinSound.play();
@@ -1018,7 +1086,6 @@ function update(){
       powerups.splice(index,1);
     }
   });
-
 }
 
 /* =========================
@@ -1028,8 +1095,10 @@ function update(){
 function gameLoop(){
 
   ctx.clearRect(
+
     0,
     0,
+
     canvas.width,
     canvas.height
   );
