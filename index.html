@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<meta
+name="viewport"
+content="width=device-width,initial-scale=1.0">
+
 <title>Breakout Arcade</title>
 
 <style>
@@ -14,7 +19,8 @@ box-sizing:border-box
 }
 
 body{
-background:radial-gradient(circle,#111827,#050816);
+background:
+radial-gradient(circle,#111827,#050816);
 overflow:hidden;
 font-family:Arial,sans-serif;
 color:#fff;
@@ -23,6 +29,10 @@ display:flex;
 justify-content:center;
 align-items:center
 }
+
+/* =========================
+   MENU
+========================= */
 
 .menu{
 position:fixed;
@@ -40,8 +50,15 @@ padding:20px
 font-size:clamp(2.2rem,5vw,4rem);
 color:#00e5ff;
 margin-bottom:20px;
-text-shadow:0 0 10px #00e5ff,0 0 20px #00e5ff
+text-shadow:
+0 0 10px #00e5ff,
+0 0 20px #00e5ff,
+0 0 40px #00e5ff
 }
+
+/* =========================
+   BOTONES
+========================= */
 
 button{
 padding:14px 30px;
@@ -53,8 +70,17 @@ font-weight:bold;
 cursor:pointer;
 margin:10px;
 font-size:1rem;
-box-shadow:0 0 15px #8ff0c8
+box-shadow:0 0 15px #8ff0c8;
+transition:.2s
 }
+
+button:hover{
+transform:scale(1.05)
+}
+
+/* =========================
+   RECORDS
+========================= */
 
 .records-panel{
 display:none;
@@ -78,6 +104,10 @@ color:#00e5ff
 margin:8px 0;
 color:#8ff0c8
 }
+
+/* =========================
+   GAME
+========================= */
 
 .game-container{
 width:100%;
@@ -137,6 +167,8 @@ width:220px
 
 <body>
 
+<!-- MENU -->
+
 <div class="menu" id="menu">
 
 <h1>BREAKOUT ARCADE</h1>
@@ -149,7 +181,9 @@ width:220px
 🏆 RECORDS
 </button>
 
-<div class="records-panel" id="recordsPanel">
+<div
+class="records-panel"
+id="recordsPanel">
 
 <h2>TOP LOCAL</h2>
 
@@ -158,6 +192,8 @@ width:220px
 </div>
 
 </div>
+
+<!-- GAME -->
 
 <div class="game-container">
 
@@ -168,7 +204,10 @@ width:220px
 </div>
 
 <div class="life-container">
-<div class="life-bar" id="lifeBar"></div>
+<div
+class="life-bar"
+id="lifeBar">
+</div>
 </div>
 
 <div>
@@ -181,17 +220,27 @@ LEVEL <span id="levelText">1</span>
 
 </div>
 
-<canvas id="game" width="800" height="500"></canvas>
+<canvas
+id="game"
+width="800"
+height="500">
+</canvas>
 
 </div>
 
 <script>
 
-const $ = e => document.getElementById(e);
+/* =========================
+   HELPERS
+========================= */
+
+const $ = e =>
+document.getElementById(e);
 
 const canvas = $("game");
 
-const ctx = canvas.getContext("2d");
+const ctx =
+canvas.getContext("2d");
 
 const isMobile =
 /Android|iPhone|iPad|iPod/i.test(
@@ -202,13 +251,17 @@ navigator.userAgent
    IMAGENES
 ========================= */
 
-const brickImage = new Image();
+const brickImage =
+new Image();
 
-brickImage.src = "Images/pared.png";
+brickImage.src =
+"Images/pared.png";
 
-const asteroidImage = new Image();
+const asteroidImage =
+new Image();
 
-asteroidImage.src = "Images/asteroide.png";
+asteroidImage.src =
+"Images/asteroide.png";
 
 /* =========================
    AUDIO
@@ -270,7 +323,7 @@ let balls = [];
 let bricks = [];
 
 /* =========================
-   COLORS
+   COLORES
 ========================= */
 
 const colors = [
@@ -284,7 +337,7 @@ const colors = [
 ];
 
 /* =========================
-   PADDLE
+   BARRA
 ========================= */
 
 const paddle = {
@@ -305,7 +358,7 @@ color:"#00e5ff"
 };
 
 /* =========================
-   BRICKS
+   BLOQUES
 ========================= */
 
 const config = {
@@ -326,7 +379,7 @@ left:25
 };
 
 /* =========================
-   BALL
+   PELOTA
 ========================= */
 
 const resetBall = () => ({
@@ -335,7 +388,7 @@ x:400,
 
 y:250,
 
-r:12,
+r:14,
 
 sx:isMobile ? 2 : 3,
 
@@ -345,7 +398,7 @@ sy:isMobile ? 2 : 3
 balls = [resetBall()];
 
 /* =========================
-   CREATE BRICKS
+   CREAR BLOQUES
 ========================= */
 
 function createBricks(){
@@ -410,7 +463,8 @@ createBricks();
 
 function saveRecord(name,score){
 
-let records = JSON.parse(
+let records =
+JSON.parse(
 localStorage.getItem("records")
 ) || [];
 
@@ -433,12 +487,11 @@ function showRecords(){
 ui.panel.style.display =
 
 ui.panel.style.display==="block"
-
 ? "none"
-
 : "block";
 
-let records = JSON.parse(
+let records =
+JSON.parse(
 localStorage.getItem("records")
 ) || [];
 
@@ -525,7 +578,7 @@ e.preventDefault();
 },{passive:false});
 
 /* =========================
-   DRAW
+   DIBUJAR BARRA
 ========================= */
 
 function drawPaddle(){
@@ -541,6 +594,10 @@ paddle.height
 );
 }
 
+/* =========================
+   DIBUJAR PELOTAS
+========================= */
+
 function drawBalls(){
 
 balls.forEach(b=>{
@@ -549,17 +606,19 @@ ctx.drawImage(
 
 asteroidImage,
 
-b.x - b.r,
+b.x-b.r,
+b.y-b.r,
 
-b.y - b.r,
-
-b.r * 2,
-
-b.r * 2
-
+b.r*2,
+b.r*2
 );
+
 });
 }
+
+/* =========================
+   DIBUJAR POWERUPS
+========================= */
 
 function drawPowerups(){
 
@@ -574,6 +633,10 @@ p.y
 );
 });
 }
+
+/* =========================
+   DIBUJAR BLOQUES
+========================= */
 
 function drawBricks(){
 
@@ -623,9 +686,26 @@ y+18
 );
 }
 
-/* ===== LADRILLO ===== */
+/* ===== SOMBRA AMARILLA ===== */
 
 ctx.globalAlpha = 1;
+
+if(b.type==="double"){
+
+ctx.shadowColor = "#ffd700";
+
+ctx.shadowBlur = 25;
+
+ctx.shadowOffsetX = 0;
+
+ctx.shadowOffsetY = 0;
+
+}else{
+
+ctx.shadowBlur = 0;
+}
+
+/* ===== LADRILLO ===== */
 
 ctx.drawImage(
 brickImage,
@@ -634,6 +714,10 @@ y,
 config.w,
 config.h
 );
+
+/* ===== RESET ===== */
+
+ctx.shadowBlur = 0;
 
 }
 }
@@ -695,6 +779,8 @@ function update(){
 if(!started)
 return;
 
+/* ===== MOBILE ===== */
+
 if(isMobile){
 
 paddle.x +=
@@ -703,12 +789,16 @@ paddle.x +=
 * 0.35;
 
 paddle.x = Math.max(
+
 0,
+
 Math.min(
 canvas.width-paddle.width,
 paddle.x
 ));
 }
+
+/* ===== PC ===== */
 
 if(
 right &&
@@ -724,11 +814,15 @@ paddle.x>0
 paddle.x -= paddle.speed;
 }
 
+/* ===== BALLS ===== */
+
 balls.forEach(ball=>{
 
 ball.x += ball.sx;
 
 ball.y += ball.sy;
+
+/* ===== WALLS ===== */
 
 if(
 ball.x+ball.r>canvas.width ||
@@ -740,6 +834,8 @@ ball.sx *= -1;
 if(ball.y-ball.r<0){
 ball.sy *= -1;
 }
+
+/* ===== PADDLE ===== */
 
 if(
 
@@ -795,6 +891,8 @@ sy:ball.sy
 });
 }
 }
+
+/* ===== BLOQUES ===== */
 
 for(let c=0;c<config.cols;c++){
 
@@ -854,6 +952,8 @@ nextLevel();
 }
 }
 
+/* ===== VIDA ===== */
+
 if(ball.y>canvas.height){
 
 lives--;
@@ -885,6 +985,8 @@ location.reload();
 }
 }
 });
+
+/* ===== POWERUPS ===== */
 
 powerups.forEach((p,i)=>{
 
