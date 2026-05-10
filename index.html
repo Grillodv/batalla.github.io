@@ -39,10 +39,6 @@ body{
   touch-action:none;
 }
 
-/* =========================
-   MENU
-========================= */
-
 .menu{
 
   position:fixed;
@@ -114,10 +110,6 @@ body{
   color:#8ff0c8;
 }
 
-/* =========================
-   BUTTONS
-========================= */
-
 button{
 
   padding:14px 30px;
@@ -148,10 +140,6 @@ button:active{
 
   transform:scale(0.96);
 }
-
-/* =========================
-   GAME
-========================= */
 
 .game-container{
 
@@ -239,9 +227,14 @@ canvas{
   display:block;
 }
 
-/* =========================
-   MOBILE
-========================= */
+.level-text{
+
+  color:#ffbf00;
+
+  font-size:1.2rem;
+
+  font-weight:bold;
+}
 
 @media(max-width:768px){
 
@@ -275,8 +268,6 @@ canvas{
 
 <body>
 
-<!-- MENU -->
-
 <div class="menu" id="menu">
 
   <h1>BREAKOUT ARCADE</h1>
@@ -301,8 +292,6 @@ canvas{
 
 </div>
 
-<!-- GAME -->
-
 <div class="game-container">
 
   <div class="hud">
@@ -325,6 +314,11 @@ canvas{
     <div>
       ⭐ Score:
       <span id="score">0</span>
+    </div>
+
+    <div class="level-text">
+      LEVEL:
+      <span id="levelText">1</span>
     </div>
 
   </div>
@@ -371,8 +365,6 @@ new Audio("Sounds/burbuja.mp3");
 
 coinSound.volume = 0.7;
 bubbleSound.volume = 0.7;
-
-/* ===== UNLOCK AUDIO ===== */
 
 function unlockAudio(){
 
@@ -424,6 +416,9 @@ document.getElementById("lives");
 const lifeBar =
 document.getElementById("lifeBar");
 
+const levelText =
+document.getElementById("levelText");
+
 /* =========================
    VARIABLES
 ========================= */
@@ -432,15 +427,20 @@ let score = 0;
 
 let lives = 3;
 
+let level = 1;
+
 let gameStarted = false;
 
 /* =========================
    PADDLE
 ========================= */
 
+const originalPaddleWidth =
+isMobile ? 170 : 120;
+
 const paddle = {
 
-  width:isMobile ? 170 : 120,
+  width:originalPaddleWidth,
 
   height:15,
 
@@ -489,8 +489,6 @@ const cometBlocks = [];
 
 const doubleBlocks = [];
 
-/* ===== COMETS ===== */
-
 while(cometBlocks.length < 7){
 
   let num =
@@ -501,8 +499,6 @@ while(cometBlocks.length < 7){
     cometBlocks.push(num);
   }
 }
-
-/* ===== DOUBLE ===== */
 
 while(doubleBlocks.length < 4){
 
@@ -668,7 +664,7 @@ document.addEventListener("keyup",e=>{
 });
 
 /* =========================
-   MOBILE TOUCH FIX
+   TOUCH
 ========================= */
 
 function movePaddle(clientX){
@@ -700,8 +696,6 @@ function movePaddle(clientX){
   }
 }
 
-/* ===== TOUCH START ===== */
-
 canvas.addEventListener(
 "touchstart",
 e=>{
@@ -716,8 +710,6 @@ e=>{
 {passive:false}
 );
 
-/* ===== TOUCH MOVE ===== */
-
 canvas.addEventListener(
 "touchmove",
 e=>{
@@ -731,6 +723,104 @@ e=>{
 },
 {passive:false}
 );
+
+/* =========================
+   LEVEL COMPLETE
+========================= */
+
+function checkLevelComplete(){
+
+  let remaining = 0;
+
+  for(let c=0;c<brickCols;c++){
+
+    for(let r=0;r<brickRows;r++){
+
+      if(bricks[c][r].status === 1){
+
+        remaining++;
+      }
+    }
+  }
+
+  if(remaining === 0){
+
+    if(level === 1){
+
+      level = 2;
+
+      levelText.innerText = level;
+
+      setTimeout(()=>{
+
+        alert("🔥 LEVEL 2 🔥");
+
+      },100);
+
+      resetLevel2();
+
+    }else{
+
+      setTimeout(()=>{
+
+        alert("🏆 GANASTE EL JUEGO 🏆");
+
+        let playerName = prompt(
+          "Ingresa tu nombre:"
+        );
+
+        if(playerName){
+
+          saveRecord(
+            playerName,
+            score
+          );
+        }
+
+        location.reload();
+
+      },300);
+    }
+  }
+}
+
+/* =========================
+   RESET LEVEL 2
+========================= */
+
+function resetLevel2(){
+
+  paddle.width =
+  originalPaddleWidth;
+
+  paddle.color =
+  "#ff3b3b";
+
+  balls = [
+
+    {
+
+      x:400,
+      y:250,
+
+      radius:10,
+
+      speedX:isMobile ? 3 : 4,
+
+      speedY:isMobile ? 3 : 4
+    }
+  ];
+
+  powerups = [];
+
+  for(let c=0;c<brickCols;c++){
+
+    for(let r=0;r<brickRows;r++){
+
+      bricks[c][r].status = 1;
+    }
+  }
+}
 
 /* =========================
    LIFE BAR
@@ -891,8 +981,6 @@ function update(){
 
   if(!gameStarted) return;
 
-  /* ===== PC ===== */
-
   if(
     rightPressed &&
     paddle.x+paddle.width<canvas.width
@@ -909,15 +997,13 @@ function update(){
     paddle.x -= paddle.speed;
   }
 
-  /* ===== BALLS ===== */
-
   balls.forEach(ball=>{
 
     ball.x += ball.speedX;
 
     ball.y += ball.speedY;
 
-    /* ===== WALLS ===== */
+    /* WALLS */
 
     if(
       ball.x+ball.radius>canvas.width ||
@@ -932,7 +1018,7 @@ function update(){
       ball.speedY *= -1;
     }
 
-    /* ===== PADDLE ===== */
+    /* PADDLE */
 
     if(
 
@@ -973,11 +1059,14 @@ function update(){
 
       scoreText.innerText=score;
 
-      /* ===== EVERY 5 ===== */
+      /* ===== GROW 0.5% ===== */
 
       if(score % 5 === 0){
 
-        paddle.width *= 1.02;
+        if(level === 1){
+
+          paddle.width *= 1.005;
+        }
 
         const colors = [
 
@@ -998,7 +1087,7 @@ function update(){
         ];
       }
 
-      /* ===== EVERY 20 ===== */
+      /* ===== EXTRA BALL ===== */
 
       if(score % 20 === 0){
 
@@ -1016,7 +1105,9 @@ function update(){
       }
     }
 
-    /* ===== BRICKS ===== */
+    /* =========================
+       BRICKS
+    ========================= */
 
     for(let c=0;c<brickCols;c++){
 
@@ -1039,6 +1130,8 @@ function update(){
             ball.speedY *= -1;
 
             b.status=0;
+
+            checkLevelComplete();
 
             /* ===== COMET ===== */
 
@@ -1134,25 +1227,7 @@ function update(){
 
     ){
 
-      paddle.width *= 1.12;
-
-      const cometColors = [
-
-        "#00e5ff",
-        "#8a2be2",
-        "#ff66cc",
-        "#00ff99",
-        "#ffbf00",
-        "#ffffff"
-      ];
-
-      paddle.color =
-
-      cometColors[
-        Math.floor(
-          Math.random()*cometColors.length
-        )
-      ];
+      paddle.width *= 1.05;
 
       coinSound.currentTime = 0;
 
