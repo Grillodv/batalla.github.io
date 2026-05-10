@@ -151,7 +151,7 @@ width:220px
 
 <div class="records-panel" id="recordsPanel">
 
-<h2>TOP GLOBAL</h2>
+<h2>TOP LOCAL</h2>
 
 <ol id="recordsList"></ol>
 
@@ -187,17 +187,6 @@ LEVEL <span id="levelText">1</span>
 
 <script>
 
-/* =========================
-   API
-========================= */
-
-const API_URL =
-"https://script.google.com/macros/library/d/1nxWKjBhkKJ7NsGmHx9mzKNfA2w9cwY50-0Z3J4hdZ_4OcfJRBpwfAqpl/4";
-
-/* =========================
-   HELPERS
-========================= */
-
 const $ = e => document.getElementById(e);
 
 const canvas = $("game");
@@ -208,6 +197,18 @@ const isMobile =
 /Android|iPhone|iPad|iPod/i.test(
 navigator.userAgent
 );
+
+/* =========================
+   IMAGENES
+========================= */
+
+const brickImage = new Image();
+
+brickImage.src = "Images/pared.png";
+
+const asteroidImage = new Image();
+
+asteroidImage.src = "Images/asteroide.png";
 
 /* =========================
    AUDIO
@@ -334,7 +335,7 @@ x:400,
 
 y:250,
 
-r:10,
+r:12,
 
 sx:isMobile ? 2 : 3,
 
@@ -404,46 +405,30 @@ comet.includes(i)
 createBricks();
 
 /* =========================
-   SAVE RECORD
+   RECORDS LOCAL
 ========================= */
 
-async function saveRecord(name,score){
+function saveRecord(name,score){
 
-try{
+let records = JSON.parse(
+localStorage.getItem("records")
+) || [];
 
-await fetch(API_URL,{
+records.push({name,score});
 
-method:"POST",
+records.sort((a,b)=>
+b.score-a.score
+);
 
-mode:"no-cors",
+records = records.slice(0,10);
 
-headers:{
-"Content-Type":"text/plain"
-},
-
-body:JSON.stringify({
-name:name,
-score:score
-})
-
-});
-
-console.log("Score guardado");
-
-}catch(error){
-
-console.log(
-"Error guardando:",
-error
+localStorage.setItem(
+"records",
+JSON.stringify(records)
 );
 }
-}
 
-/* =========================
-   SHOW RECORDS
-========================= */
-
-async function showRecords(){
+function showRecords(){
 
 ui.panel.style.display =
 
@@ -453,17 +438,13 @@ ui.panel.style.display==="block"
 
 : "block";
 
-try{
-
-const res =
-await fetch(API_URL);
-
-const data =
-await res.json();
+let records = JSON.parse(
+localStorage.getItem("records")
+) || [];
 
 ui.list.innerHTML="";
 
-data.forEach((r,i)=>{
+records.forEach((r,i)=>{
 
 let li =
 document.createElement("li");
@@ -477,14 +458,6 @@ li.innerText =
 ui.list.appendChild(li);
 
 });
-
-}catch(error){
-
-ui.list.innerHTML =
-"<li>Error cargando records</li>";
-
-console.log(error);
-}
 }
 
 ui.records.onclick =
@@ -572,19 +545,19 @@ function drawBalls(){
 
 balls.forEach(b=>{
 
-ctx.beginPath();
+ctx.drawImage(
 
-ctx.arc(
-b.x,
-b.y,
-b.r,
-0,
-Math.PI*2
+asteroidImage,
+
+b.x - b.r,
+
+b.y - b.r,
+
+b.r * 2,
+
+b.r * 2
+
 );
-
-ctx.fillStyle="#fff";
-
-ctx.fill();
 });
 }
 
@@ -624,24 +597,13 @@ r*(config.h+config.p)
 b.x=x;
 b.y=y;
 
-ctx.fillStyle=
+/* ===== ICONOS DETRAS ===== */
 
-b.type==="comet"
-? "#b026ff"
-
-: b.type==="double"
-? "#00e5ff"
-
-: "#ff3b3b";
-
-ctx.fillRect(
-x,
-y,
-config.w,
-config.h
-);
+ctx.globalAlpha = 0.25;
 
 ctx.fillStyle="#fff";
+
+ctx.font="18px Arial";
 
 if(b.type==="comet"){
 
@@ -660,6 +622,19 @@ x+12,
 y+18
 );
 }
+
+/* ===== LADRILLO ===== */
+
+ctx.globalAlpha = 1;
+
+ctx.drawImage(
+brickImage,
+x,
+y,
+config.w,
+config.h
+);
+
 }
 }
 }
@@ -695,8 +670,6 @@ alert("LEVEL 2");
 
 }else{
 
-(async()=>{
-
 let name="";
 
 while(!name.trim()){
@@ -706,15 +679,9 @@ name = prompt(
 ) || "";
 }
 
-await saveRecord(name,score);
-
-setTimeout(()=>{
+saveRecord(name,score);
 
 location.reload();
-
-},1500);
-
-})();
 }
 }
 }
@@ -728,8 +695,6 @@ function update(){
 if(!started)
 return;
 
-/* ===== MOBILE ===== */
-
 if(isMobile){
 
 paddle.x +=
@@ -738,16 +703,12 @@ paddle.x +=
 * 0.35;
 
 paddle.x = Math.max(
-
 0,
-
 Math.min(
 canvas.width-paddle.width,
 paddle.x
 ));
 }
-
-/* ===== PC ===== */
 
 if(
 right &&
@@ -763,15 +724,11 @@ paddle.x>0
 paddle.x -= paddle.speed;
 }
 
-/* ===== BALLS ===== */
-
 balls.forEach(ball=>{
 
 ball.x += ball.sx;
 
 ball.y += ball.sy;
-
-/* ===== WALLS ===== */
 
 if(
 ball.x+ball.r>canvas.width ||
@@ -783,8 +740,6 @@ ball.sx *= -1;
 if(ball.y-ball.r<0){
 ball.sy *= -1;
 }
-
-/* ===== PADDLE ===== */
 
 if(
 
@@ -840,8 +795,6 @@ sy:ball.sy
 });
 }
 }
-
-/* ===== BRICKS ===== */
 
 for(let c=0;c<config.cols;c++){
 
@@ -901,8 +854,6 @@ nextLevel();
 }
 }
 
-/* ===== LIFE ===== */
-
 if(ball.y>canvas.height){
 
 lives--;
@@ -919,8 +870,6 @@ resetBall()
 
 if(lives<=0){
 
-(async()=>{
-
 let name="";
 
 while(!name.trim()){
@@ -930,20 +879,12 @@ name = prompt(
 ) || "";
 }
 
-await saveRecord(name,score);
-
-setTimeout(()=>{
+saveRecord(name,score);
 
 location.reload();
-
-},1500);
-
-})();
 }
 }
 });
-
-/* ===== POWERUPS ===== */
 
 powerups.forEach((p,i)=>{
 
