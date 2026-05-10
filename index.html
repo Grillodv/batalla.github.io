@@ -364,22 +364,24 @@ await fetch(API_URL,{
 method:"POST",
 
 headers:{
-"Content-Type":"application/json"
+"Content-Type":"text/plain"
 },
 
 body:JSON.stringify({
-name,
-score
+name:name,
+score:score
 })
+
 });
 
 }catch(error){
 
-console.log(error);
+console.log(
+"Error guardando:",
+error
+);
 }
 }
-
-async function showRecords(){
 
 ui.panel.style.display =
 
