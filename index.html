@@ -6,7 +6,7 @@
 
 <meta
 name="viewport"
-content="width=device-width, initial-scale=1.0">
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
 <title>Breakout Arcade</title>
 
@@ -16,6 +16,7 @@ content="width=device-width, initial-scale=1.0">
   margin:0;
   padding:0;
   box-sizing:border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body{
@@ -34,6 +35,8 @@ body{
   display:flex;
   justify-content:center;
   align-items:center;
+
+  touch-action:none;
 }
 
 /* =========================
@@ -112,7 +115,7 @@ body{
 }
 
 /* =========================
-   BOTONES
+   BUTTONS
 ========================= */
 
 button{
@@ -141,11 +144,9 @@ button{
   0 0 15px #8ff0c8;
 }
 
-button:hover{
+button:active{
 
-  transform:scale(1.05);
-
-  background:#b8ffe3;
+  transform:scale(0.96);
 }
 
 /* =========================
@@ -186,6 +187,8 @@ button:hover{
   flex-wrap:wrap;
 
   color:#00e5ff;
+
+  font-weight:bold;
 }
 
 .life-container{
@@ -232,10 +235,12 @@ canvas{
   height:auto;
 
   touch-action:none;
+
+  display:block;
 }
 
 /* =========================
-   MOVIL
+   MOBILE
 ========================= */
 
 @media(max-width:768px){
@@ -249,6 +254,8 @@ canvas{
     justify-content:center;
 
     text-align:center;
+
+    font-size:0.9rem;
   }
 
   .life-container{
@@ -344,7 +351,7 @@ const ctx =
 canvas.getContext("2d");
 
 /* =========================
-   MOVIL
+   MOBILE
 ========================= */
 
 const isMobile =
@@ -353,7 +360,7 @@ navigator.userAgent
 );
 
 /* =========================
-   SONIDOS
+   AUDIO
 ========================= */
 
 const coinSound =
@@ -361,6 +368,29 @@ new Audio("Sounds/coin.mp3");
 
 const bubbleSound =
 new Audio("Sounds/burbuja.mp3");
+
+coinSound.volume = 0.7;
+bubbleSound.volume = 0.7;
+
+/* ===== UNLOCK AUDIO ===== */
+
+function unlockAudio(){
+
+  [coinSound,bubbleSound]
+  .forEach(sound=>{
+
+    sound.play()
+    .then(()=>{
+
+      sound.pause();
+
+      sound.currentTime = 0;
+
+    })
+    .catch(()=>{});
+
+  });
+}
 
 /* =========================
    MENU
@@ -405,12 +435,12 @@ let lives = 3;
 let gameStarted = false;
 
 /* =========================
-   BARRA
+   PADDLE
 ========================= */
 
 const paddle = {
 
-  width:isMobile ? 160 : 120,
+  width:isMobile ? 170 : 120,
 
   height:15,
 
@@ -418,13 +448,13 @@ const paddle = {
 
   y:460,
 
-  speed:isMobile ? 5 : 8,
+  speed:8,
 
   color:"#00e5ff"
 };
 
 /* =========================
-   CONTROLES
+   CONTROLS
 ========================= */
 
 let rightPressed = false;
@@ -432,7 +462,7 @@ let rightPressed = false;
 let leftPressed = false;
 
 /* =========================
-   BLOQUES
+   BRICKS
 ========================= */
 
 const brickRows = 3;
@@ -452,14 +482,14 @@ const brickOffsetLeft = 25;
 let bricks = [];
 
 /* =========================
-   ITEMS ESPECIALES
+   SPECIAL BLOCKS
 ========================= */
 
 const cometBlocks = [];
 
 const doubleBlocks = [];
 
-/* ===== 7 COMETAS ===== */
+/* ===== COMETS ===== */
 
 while(cometBlocks.length < 7){
 
@@ -472,7 +502,7 @@ while(cometBlocks.length < 7){
   }
 }
 
-/* ===== 4 DOBLES ===== */
+/* ===== DOUBLE ===== */
 
 while(doubleBlocks.length < 4){
 
@@ -489,7 +519,7 @@ while(doubleBlocks.length < 4){
 }
 
 /* =========================
-   CREAR BLOQUES
+   CREATE BRICKS
 ========================= */
 
 for(let c=0;c<brickCols;c++){
@@ -519,7 +549,7 @@ for(let c=0;c<brickCols;c++){
 }
 
 /* =========================
-   PELOTAS
+   BALLS
 ========================= */
 
 let balls = [
@@ -527,11 +557,12 @@ let balls = [
   {
     x:400,
     y:250,
+
     radius:10,
 
-    speedX:isMobile ? 2 : 3,
+    speedX:isMobile ? 2.3 : 3,
 
-    speedY:isMobile ? 2 : 3
+    speedY:isMobile ? 2.3 : 3
   }
 ];
 
@@ -602,10 +633,12 @@ showRecords
 );
 
 /* =========================
-   INICIAR
+   START
 ========================= */
 
 playBtn.addEventListener("click",()=>{
+
+  unlockAudio();
 
   menu.style.display = "none";
 
@@ -613,7 +646,7 @@ playBtn.addEventListener("click",()=>{
 });
 
 /* =========================
-   TECLADO
+   KEYBOARD
 ========================= */
 
 document.addEventListener("keydown",e=>{
@@ -635,30 +668,72 @@ document.addEventListener("keyup",e=>{
 });
 
 /* =========================
-   TOUCH MOVIL
+   MOBILE TOUCH FIX
 ========================= */
 
-let targetX = paddle.x;
+function movePaddle(clientX){
+
+  const rect =
+  canvas.getBoundingClientRect();
+
+  const scaleX =
+  canvas.width / rect.width;
+
+  let x =
+  (clientX - rect.left) * scaleX;
+
+  paddle.x =
+  x - paddle.width / 2;
+
+  if(paddle.x < 0){
+
+    paddle.x = 0;
+  }
+
+  if(
+    paddle.x + paddle.width >
+    canvas.width
+  ){
+
+    paddle.x =
+    canvas.width - paddle.width;
+  }
+}
+
+/* ===== TOUCH START ===== */
+
+canvas.addEventListener(
+"touchstart",
+e=>{
+
+  movePaddle(
+    e.touches[0].clientX
+  );
+
+  e.preventDefault();
+
+},
+{passive:false}
+);
+
+/* ===== TOUCH MOVE ===== */
 
 canvas.addEventListener(
 "touchmove",
 e=>{
 
-  const rect =
-  canvas.getBoundingClientRect();
-
-  const touchX =
-  e.touches[0].clientX - rect.left;
-
-  targetX =
-  touchX - paddle.width / 2;
+  movePaddle(
+    e.touches[0].clientX
+  );
 
   e.preventDefault();
 
-},{passive:false});
+},
+{passive:false}
+);
 
 /* =========================
-   VIDA
+   LIFE BAR
 ========================= */
 
 function updateLifeBar(){
@@ -668,7 +743,7 @@ function updateLifeBar(){
 }
 
 /* =========================
-   BARRA
+   DRAW PADDLE
 ========================= */
 
 function drawPaddle(){
@@ -687,7 +762,7 @@ function drawPaddle(){
 }
 
 /* =========================
-   PELOTAS
+   DRAW BALLS
 ========================= */
 
 function drawBalls(){
@@ -716,7 +791,7 @@ function drawBalls(){
 }
 
 /* =========================
-   BLOQUES
+   DRAW BRICKS
 ========================= */
 
 function drawBricks(){
@@ -816,28 +891,6 @@ function update(){
 
   if(!gameStarted) return;
 
-  /* ===== MOVIL SUAVE ===== */
-
-  if(isMobile){
-
-    paddle.x +=
-    (targetX - paddle.x) * 0.18;
-
-    if(paddle.x < 0){
-
-      paddle.x = 0;
-    }
-
-    if(
-      paddle.x + paddle.width >
-      canvas.width
-    ){
-
-      paddle.x =
-      canvas.width - paddle.width;
-    }
-  }
-
   /* ===== PC ===== */
 
   if(
@@ -856,7 +909,7 @@ function update(){
     paddle.x -= paddle.speed;
   }
 
-  /* ===== PELOTAS ===== */
+  /* ===== BALLS ===== */
 
   balls.forEach(ball=>{
 
@@ -864,7 +917,7 @@ function update(){
 
     ball.y += ball.speedY;
 
-    /* ===== PAREDES ===== */
+    /* ===== WALLS ===== */
 
     if(
       ball.x+ball.radius>canvas.width ||
@@ -879,7 +932,7 @@ function update(){
       ball.speedY *= -1;
     }
 
-    /* ===== REBOTE BARRA ===== */
+    /* ===== PADDLE ===== */
 
     if(
 
@@ -896,6 +949,16 @@ function update(){
 
     ){
 
+      let hitPoint =
+
+      (ball.x -
+      (paddle.x + paddle.width/2))
+
+      / (paddle.width/2);
+
+      ball.speedX =
+      hitPoint * 5;
+
       ball.speedY =
       -Math.abs(ball.speedY);
 
@@ -904,13 +967,13 @@ function update(){
 
       bubbleSound.currentTime = 0;
 
-      bubbleSound.play();
+      bubbleSound.play().catch(()=>{});
 
       score++;
 
       scoreText.innerText=score;
 
-      /* ===== CADA 5 ===== */
+      /* ===== EVERY 5 ===== */
 
       if(score % 5 === 0){
 
@@ -933,22 +996,9 @@ function update(){
             Math.random()*colors.length
           )
         ];
-
-        balls.forEach(b=>{
-
-          if(Math.abs(b.speedX)<10){
-
-            b.speedX *= 1.01;
-          }
-
-          if(Math.abs(b.speedY)<10){
-
-            b.speedY *= 1.01;
-          }
-        });
       }
 
-      /* ===== CADA 20 ===== */
+      /* ===== EVERY 20 ===== */
 
       if(score % 20 === 0){
 
@@ -966,7 +1016,7 @@ function update(){
       }
     }
 
-    /* ===== BLOQUES ===== */
+    /* ===== BRICKS ===== */
 
     for(let c=0;c<brickCols;c++){
 
@@ -990,7 +1040,7 @@ function update(){
 
             b.status=0;
 
-            /* ===== COMETA ===== */
+            /* ===== COMET ===== */
 
             if(b.type==="comet"){
 
@@ -1003,7 +1053,7 @@ function update(){
               });
             }
 
-            /* ===== DOBLE ===== */
+            /* ===== DOUBLE ===== */
 
             if(b.type==="double"){
 
@@ -1024,7 +1074,7 @@ function update(){
       }
     }
 
-    /* ===== PERDER VIDA ===== */
+    /* ===== LOSE LIFE ===== */
 
     if(ball.y > canvas.height){
 
@@ -1037,9 +1087,9 @@ function update(){
       ball.x=400;
       ball.y=250;
 
-      ball.speedX=isMobile ? 2 : 3;
+      ball.speedX=isMobile ? 2.3 : 3;
 
-      ball.speedY=isMobile ? 2 : 3;
+      ball.speedY=isMobile ? 2.3 : 3;
 
       if(lives<=0){
 
@@ -1084,7 +1134,7 @@ function update(){
 
     ){
 
-      paddle.width *= 1.15;
+      paddle.width *= 1.12;
 
       const cometColors = [
 
@@ -1106,7 +1156,7 @@ function update(){
 
       coinSound.currentTime = 0;
 
-      coinSound.play();
+      coinSound.play().catch(()=>{});
 
       powerups.splice(index,1);
     }
