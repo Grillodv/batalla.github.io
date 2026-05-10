@@ -371,7 +371,6 @@ if(
 !double.includes(n) &&
 !comet.includes(n)
 ){
-
 double.push(n);
 }
 }
@@ -405,7 +404,7 @@ comet.includes(i)
 createBricks();
 
 /* =========================
-   RECORDS
+   SAVE RECORD
 ========================= */
 
 async function saveRecord(name,score){
@@ -415,6 +414,8 @@ try{
 await fetch(API_URL,{
 
 method:"POST",
+
+mode:"no-cors",
 
 headers:{
 "Content-Type":"text/plain"
@@ -427,11 +428,20 @@ score:score
 
 });
 
+console.log("Score guardado");
+
 }catch(error){
 
-console.log(error);
+console.log(
+"Error guardando:",
+error
+);
 }
 }
+
+/* =========================
+   SHOW RECORDS
+========================= */
 
 async function showRecords(){
 
@@ -465,9 +475,13 @@ li.innerText =
 `${medal} ${r.name} - ${r.score}`;
 
 ui.list.appendChild(li);
+
 });
 
 }catch(error){
+
+ui.list.innerHTML =
+"<li>Error cargando records</li>";
 
 console.log(error);
 }
@@ -681,6 +695,8 @@ alert("LEVEL 2");
 
 }else{
 
+(async()=>{
+
 let name="";
 
 while(!name.trim()){
@@ -690,9 +706,15 @@ name = prompt(
 ) || "";
 }
 
-saveRecord(name,score);
+await saveRecord(name,score);
+
+setTimeout(()=>{
 
 location.reload();
+
+},1500);
+
+})();
 }
 }
 }
@@ -731,7 +753,6 @@ if(
 right &&
 paddle.x+paddle.width<canvas.width
 ){
-
 paddle.x += paddle.speed;
 }
 
@@ -739,7 +760,6 @@ if(
 left &&
 paddle.x>0
 ){
-
 paddle.x -= paddle.speed;
 }
 
@@ -757,12 +777,10 @@ if(
 ball.x+ball.r>canvas.width ||
 ball.x-ball.r<0
 ){
-
 ball.sx *= -1;
 }
 
 if(ball.y-ball.r<0){
-
 ball.sy *= -1;
 }
 
@@ -802,7 +820,6 @@ Math.random()*colors.length
 )];
 
 if(level===1){
-
 paddle.width *= 1.005;
 }
 }
@@ -902,6 +919,8 @@ resetBall()
 
 if(lives<=0){
 
+(async()=>{
+
 let name="";
 
 while(!name.trim()){
@@ -911,9 +930,15 @@ name = prompt(
 ) || "";
 }
 
-saveRecord(name,score);
+await saveRecord(name,score);
+
+setTimeout(()=>{
 
 location.reload();
+
+},1500);
+
+})();
 }
 }
 });
