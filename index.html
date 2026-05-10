@@ -16,7 +16,7 @@ box-sizing:border-box
 body{
 background:radial-gradient(circle,#111827,#050816);
 overflow:hidden;
-font-family:Arial;
+font-family:Arial,sans-serif;
 color:#fff;
 min-height:100vh;
 display:flex;
@@ -39,8 +39,8 @@ padding:20px
 .menu h1{
 font-size:clamp(2.2rem,5vw,4rem);
 color:#00e5ff;
-text-shadow:0 0 10px #00e5ff,0 0 20px #00e5ff;
-margin-bottom:20px
+margin-bottom:20px;
+text-shadow:0 0 10px #00e5ff,0 0 20px #00e5ff
 }
 
 button{
@@ -52,6 +52,7 @@ color:#083b2d;
 font-weight:bold;
 cursor:pointer;
 margin:10px;
+font-size:1rem;
 box-shadow:0 0 15px #8ff0c8
 }
 
@@ -65,6 +66,17 @@ border-radius:15px;
 padding:20px;
 max-height:350px;
 overflow:auto
+}
+
+.records-panel h2{
+text-align:center;
+margin-bottom:10px;
+color:#00e5ff
+}
+
+.records-panel li{
+margin:8px 0;
+color:#8ff0c8
 }
 
 .game-container{
@@ -98,7 +110,8 @@ overflow:hidden
 
 .life-bar{
 height:100%;
-background:lime
+background:lime;
+transition:.3s
 }
 
 canvas{
@@ -109,6 +122,14 @@ box-shadow:0 0 20px #00e5ff;
 width:100%;
 max-width:800px;
 touch-action:none
+}
+
+@media(max-width:768px){
+
+button{
+width:220px
+}
+
 }
 
 </style>
@@ -166,8 +187,16 @@ LEVEL <span id="levelText">1</span>
 
 <script>
 
+/* =========================
+   API
+========================= */
+
 const API_URL =
 "https://script.google.com/macros/s/AKfycbwnflYQWDMpO69X-3aS9vo8qYTysOFIDkX19w70Msa_IV9xMdFep_XQh-WolILvBlrg/exec";
+
+/* =========================
+   HELPERS
+========================= */
 
 const $ = e => document.getElementById(e);
 
@@ -180,21 +209,19 @@ const isMobile =
 navigator.userAgent
 );
 
+/* =========================
+   AUDIO
+========================= */
+
 const coin =
 new Audio("Sounds/coin.mp3");
 
 const pop =
 new Audio("Sounds/burbuja.mp3");
 
-let score = 0;
-
-let lives = 3;
-
-let level = 1;
-
-let started = false;
-
-let targetX = 340;
+/* =========================
+   UI
+========================= */
 
 const ui = {
 
@@ -217,6 +244,48 @@ life:$("lifeBar"),
 level:$("levelText")
 };
 
+/* =========================
+   GAME VARS
+========================= */
+
+let score = 0;
+
+let lives = 3;
+
+let level = 1;
+
+let started = false;
+
+let targetX = 340;
+
+let right = false;
+
+let left = false;
+
+let powerups = [];
+
+let balls = [];
+
+let bricks = [];
+
+/* =========================
+   COLORS
+========================= */
+
+const colors = [
+
+"#ffbf00",
+"#00e5ff",
+"#ff3b3b",
+"#8a2be2",
+"#00ff99",
+"#ff66cc"
+];
+
+/* =========================
+   PADDLE
+========================= */
+
 const paddle = {
 
 base:isMobile ? 160 : 120,
@@ -233,6 +302,10 @@ speed:isMobile ? 5 : 8,
 
 color:"#00e5ff"
 };
+
+/* =========================
+   BRICKS
+========================= */
 
 const config = {
 
@@ -251,25 +324,9 @@ top:50,
 left:25
 };
 
-let right = false;
-
-let left = false;
-
-let powerups = [];
-
-let balls = [];
-
-let bricks = [];
-
-const colors = [
-
-"#ffbf00",
-"#00e5ff",
-"#ff3b3b",
-"#8a2be2",
-"#00ff99",
-"#ff66cc"
-];
+/* =========================
+   BALL
+========================= */
 
 const resetBall = () => ({
 
@@ -287,30 +344,28 @@ sy:isMobile ? 2 : 3
 balls = [resetBall()];
 
 /* =========================
-   CREAR BLOQUES
+   CREATE BRICKS
 ========================= */
 
 function createBricks(){
 
-bricks = [];
+bricks=[];
 
-let comet = [];
+let comet=[];
 
-let double = [];
+let double=[];
 
-while(comet.length < 7){
+while(comet.length<7){
 
-let n =
-Math.floor(Math.random()*30);
+let n=Math.floor(Math.random()*30);
 
 if(!comet.includes(n))
 comet.push(n);
 }
 
-while(double.length < 4){
+while(double.length<4){
 
-let n =
-Math.floor(Math.random()*30);
+let n=Math.floor(Math.random()*30);
 
 if(
 !double.includes(n) &&
@@ -323,17 +378,15 @@ double.push(n);
 
 for(let c=0;c<config.cols;c++){
 
-bricks[c] = [];
+bricks[c]=[];
 
 for(let r=0;r<config.rows;r++){
 
-let i =
-c * config.rows + r;
+let i=c*config.rows+r;
 
-bricks[c][r] = {
+bricks[c][r]={
 
 x:0,
-
 y:0,
 
 status:1,
@@ -352,7 +405,7 @@ comet.includes(i)
 createBricks();
 
 /* =========================
-   RECORDS ONLINE
+   RECORDS
 ========================= */
 
 async function saveRecord(name,score){
@@ -376,17 +429,15 @@ score:score
 
 }catch(error){
 
-console.log(
-"Error guardando:",
-error
-);
+console.log(error);
 }
 }
+
+async function showRecords(){
 
 ui.panel.style.display =
 
-ui.panel.style.display ===
-"block"
+ui.panel.style.display==="block"
 
 ? "none"
 
@@ -400,7 +451,7 @@ await fetch(API_URL);
 const data =
 await res.json();
 
-ui.list.innerHTML = "";
+ui.list.innerHTML="";
 
 data.forEach((r,i)=>{
 
@@ -426,20 +477,20 @@ ui.records.onclick =
 showRecords;
 
 /* =========================
-   INICIAR
+   START
 ========================= */
 
-ui.play.onclick = ()=>{
+ui.play.onclick=()=>{
 
-ui.menu.style.display = "none";
+ui.menu.style.display="none";
 
-started = true;
+started=true;
 
 coin.play().catch(()=>{});
 };
 
 /* =========================
-   TECLADO
+   KEYBOARD
 ========================= */
 
 addEventListener("keydown",e=>{
@@ -476,7 +527,7 @@ canvas.width / rect.width;
 
 targetX =
 
-(e.touches[0].clientX - rect.left)
+(e.touches[0].clientX-rect.left)
 
 * scale
 
@@ -487,7 +538,7 @@ e.preventDefault();
 },{passive:false});
 
 /* =========================
-   DIBUJAR
+   DRAW
 ========================= */
 
 function drawPaddle(){
@@ -496,10 +547,8 @@ ctx.fillStyle =
 paddle.color;
 
 ctx.fillRect(
-
 paddle.x,
 paddle.y,
-
 paddle.width,
 paddle.height
 );
@@ -545,26 +594,23 @@ for(let c=0;c<config.cols;c++){
 
 for(let r=0;r<config.rows;r++){
 
-let b =
-bricks[c][r];
+let b=bricks[c][r];
 
 if(!b.status)
 continue;
 
-let x =
-
+let x=
 c*(config.w+config.p)
 + config.left;
 
-let y =
-
+let y=
 r*(config.h+config.p)
 + config.top;
 
 b.x=x;
 b.y=y;
 
-ctx.fillStyle =
+ctx.fillStyle=
 
 b.type==="comet"
 ? "#b026ff"
@@ -605,7 +651,7 @@ y+18
 }
 
 /* =========================
-   LEVEL
+   NEXT LEVEL
 ========================= */
 
 function nextLevel(){
@@ -657,15 +703,16 @@ location.reload();
 
 function update(){
 
-if(!started) return;
+if(!started)
+return;
 
-/* ===== MOVIL ===== */
+/* ===== MOBILE ===== */
 
 if(isMobile){
 
 paddle.x +=
 
-(targetX - paddle.x)
+(targetX-paddle.x)
 * 0.35;
 
 paddle.x = Math.max(
@@ -673,9 +720,7 @@ paddle.x = Math.max(
 0,
 
 Math.min(
-
 canvas.width-paddle.width,
-
 paddle.x
 ));
 }
@@ -698,7 +743,7 @@ paddle.x>0
 paddle.x -= paddle.speed;
 }
 
-/* ===== PELOTAS ===== */
+/* ===== BALLS ===== */
 
 balls.forEach(ball=>{
 
@@ -706,14 +751,11 @@ ball.x += ball.sx;
 
 ball.y += ball.sy;
 
-/* ===== PAREDES ===== */
+/* ===== WALLS ===== */
 
 if(
-
 ball.x+ball.r>canvas.width ||
-
 ball.x-ball.r<0
-
 ){
 
 ball.sx *= -1;
@@ -724,7 +766,7 @@ if(ball.y-ball.r<0){
 ball.sy *= -1;
 }
 
-/* ===== BARRA ===== */
+/* ===== PADDLE ===== */
 
 if(
 
@@ -782,14 +824,13 @@ sy:ball.sy
 }
 }
 
-/* ===== BLOQUES ===== */
+/* ===== BRICKS ===== */
 
 for(let c=0;c<config.cols;c++){
 
 for(let r=0;r<config.rows;r++){
 
-let b =
-bricks[c][r];
+let b=bricks[c][r];
 
 if(!b.status)
 continue;
@@ -808,7 +849,7 @@ ball.y-ball.r<b.y+config.h
 
 b.status=0;
 
-ball.sy*=-1;
+ball.sy *= -1;
 
 if(b.type==="comet"){
 
@@ -843,18 +884,16 @@ nextLevel();
 }
 }
 
-/* ===== VIDA ===== */
+/* ===== LIFE ===== */
 
 if(ball.y>canvas.height){
 
 lives--;
 
-ui.lives.innerText =
-lives;
+ui.lives.innerText=lives;
 
-ui.life.style.width =
-
-(lives/3)*100 + "%";
+ui.life.style.width=
+(lives/3)*100+"%";
 
 Object.assign(
 ball,
