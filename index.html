@@ -1,38 +1,27 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-
 <meta charset="UTF-8">
-
-<meta
-name="viewport"
-content="width=device-width,initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Breakout Arcade</title>
 
 <style>
-
 *{
 margin:0;
 padding:0;
-box-sizing:border-box
+box-sizing:border-box;
 }
 
 body{
-background:
-radial-gradient(circle,#111827,#050816);
+background:radial-gradient(circle,#111827,#050816);
 overflow:hidden;
 font-family:Arial,sans-serif;
 color:#fff;
 min-height:100vh;
 display:flex;
 justify-content:center;
-align-items:center
+align-items:center;
 }
-
-/* =========================
-   MENU
-========================= */
 
 .menu{
 position:fixed;
@@ -43,7 +32,7 @@ justify-content:center;
 align-items:center;
 background:rgba(0,0,0,.92);
 z-index:10;
-padding:20px
+padding:20px;
 }
 
 .menu h1{
@@ -53,15 +42,11 @@ margin-bottom:20px;
 text-shadow:
 0 0 10px #00e5ff,
 0 0 20px #00e5ff,
-0 0 40px #00e5ff
+0 0 40px #00e5ff;
 }
 
-/* =========================
-   BOTONES
-========================= */
-
 button{
-padding:14px 30px;
+padding:12px 26px;
 border:none;
 border-radius:12px;
 background:#8ff0c8;
@@ -71,16 +56,21 @@ cursor:pointer;
 margin:10px;
 font-size:1rem;
 box-shadow:0 0 15px #8ff0c8;
-transition:.2s
+transition:.2s;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
 button:hover{
-transform:scale(1.05)
+transform:scale(1.05);
 }
 
-/* =========================
-   RECORDS
-========================= */
+.btn-icon{
+width:28px;
+height:28px;
+object-fit:contain;
+}
 
 .records-panel{
 display:none;
@@ -91,23 +81,19 @@ border:2px solid #00e5ff;
 border-radius:15px;
 padding:20px;
 max-height:350px;
-overflow:auto
+overflow:auto;
 }
 
 .records-panel h2{
 text-align:center;
 margin-bottom:10px;
-color:#00e5ff
+color:#00e5ff;
 }
 
 .records-panel li{
 margin:8px 0;
-color:#8ff0c8
+color:#8ff0c8;
 }
-
-/* =========================
-   GAME
-========================= */
 
 .game-container{
 width:100%;
@@ -115,7 +101,7 @@ max-width:900px;
 display:flex;
 flex-direction:column;
 align-items:center;
-padding:10px
+padding:10px;
 }
 
 .hud{
@@ -126,7 +112,7 @@ justify-content:center;
 gap:20px;
 flex-wrap:wrap;
 margin-bottom:10px;
-color:#00e5ff
+color:#00e5ff;
 }
 
 .life-container{
@@ -135,13 +121,13 @@ height:20px;
 background:#111;
 border:2px solid #00e5ff;
 border-radius:20px;
-overflow:hidden
+overflow:hidden;
 }
 
 .life-bar{
 height:100%;
 background:lime;
-transition:.3s
+transition:.3s;
 }
 
 canvas{
@@ -151,183 +137,119 @@ border-radius:10px;
 box-shadow:0 0 20px #00e5ff;
 width:100%;
 max-width:800px;
-touch-action:none
+touch-action:none;
 }
 
 @media(max-width:768px){
-
 button{
-width:220px
+width:220px;
+justify-content:center;
 }
-
 }
-
 </style>
 </head>
 
 <body>
 
-<!-- MENU -->
-
 <div class="menu" id="menu">
 
-<h1>BREAKOUT ARCADE</h1>
+<h1>ARCADE</h1>
 
 <button id="playBtn">
-▶️ INICIAR
+<img src="Images/iniciar.png" class="btn-icon">
+INICIAR
 </button>
 
 <button id="recordsBtn">
-🏆 RECORDS
+<img src="Images/copa.png" class="btn-icon">
+RECORDS
 </button>
 
-<div
-class="records-panel"
-id="recordsPanel">
-
+<div class="records-panel" id="recordsPanel">
 <h2>TOP LOCAL</h2>
-
 <ol id="recordsList"></ol>
-
 </div>
 
 </div>
-
-<!-- GAME -->
 
 <div class="game-container">
 
 <div class="hud">
-
-<div>
-❤️ <span id="lives">3</span>
-</div>
-
+<div>❤️ <span id="lives">3</span></div>
 <div class="life-container">
-<div
-class="life-bar"
-id="lifeBar">
+<div class="life-bar" id="lifeBar"></div>
 </div>
-</div>
-
-<div>
-⭐ <span id="score">0</span>
+<div>⭐ <span id="score">0</span></div>
+<div>LEVEL <span id="levelText">1</span></div>
 </div>
 
-<div>
-LEVEL <span id="levelText">1</span>
-</div>
-
-</div>
-
-<canvas
-id="game"
-width="800"
-height="500">
-</canvas>
+<canvas id="game" width="800" height="500"></canvas>
 
 </div>
 
 <script>
 
-/* =========================
-   HELPERS
-========================= */
+const $=e=>document.getElementById(e);
 
-const $ = e =>
-document.getElementById(e);
+const canvas=$("game");
+const ctx=canvas.getContext("2d");
 
-const canvas = $("game");
-
-const ctx =
-canvas.getContext("2d");
-
-const isMobile =
-/Android|iPhone|iPad|iPod/i.test(
-navigator.userAgent
-);
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 /* =========================
    IMAGENES
 ========================= */
 
-const brickImage =
-new Image();
+const brickImage=new Image();
+brickImage.src="Images/pared.png";
 
-brickImage.src =
-"Images/pared.png";
+const brickLevel3=new Image();
+brickLevel3.src="Images/ladrillo.png";
 
-const asteroidImage =
-new Image();
-
-asteroidImage.src =
-"Images/asteroide.png";
+const asteroidImage=new Image();
+asteroidImage.src="Images/asteroide.png";
 
 /* =========================
    AUDIO
 ========================= */
 
-const coin =
-new Audio("Sounds/coin.mp3");
-
-const pop =
-new Audio("Sounds/burbuja.mp3");
+const coin=new Audio("Sounds/coin.mp3");
+const pop=new Audio("Sounds/burbuja.mp3");
 
 /* =========================
    UI
 ========================= */
 
-const ui = {
-
+const ui={
 menu:$("menu"),
-
 play:$("playBtn"),
-
 records:$("recordsBtn"),
-
 panel:$("recordsPanel"),
-
 list:$("recordsList"),
-
 score:$("score"),
-
 lives:$("lives"),
-
 life:$("lifeBar"),
-
 level:$("levelText")
 };
 
 /* =========================
-   GAME VARS
+   VARIABLES
 ========================= */
 
-let score = 0;
+let score=0;
+let lives=3;
+let level=1;
+let nextLevelScore=15;
+let started=false;
+let targetX=340;
+let right=false;
+let left=false;
 
-let lives = 3;
+let powerups=[];
+let balls=[];
+let bricks=[];
 
-let level = 1;
-
-let started = false;
-
-let targetX = 340;
-
-let right = false;
-
-let left = false;
-
-let powerups = [];
-
-let balls = [];
-
-let bricks = [];
-
-/* =========================
-   COLORES
-========================= */
-
-const colors = [
-
+const colors=[
 "#ffbf00",
 "#00e5ff",
 "#ff3b3b",
@@ -340,20 +262,13 @@ const colors = [
    BARRA
 ========================= */
 
-const paddle = {
-
-base:isMobile ? 160 : 120,
-
-width:isMobile ? 160 : 120,
-
+const paddle={
+base:isMobile?160:120,
+width:isMobile?160:120,
 height:15,
-
 x:340,
-
 y:460,
-
-speed:isMobile ? 5 : 8,
-
+speed:isMobile?5:8,
 color:"#00e5ff"
 };
 
@@ -361,20 +276,13 @@ color:"#00e5ff"
    BLOQUES
 ========================= */
 
-const config = {
-
+const config={
 rows:3,
-
 cols:10,
-
 w:70,
-
 h:25,
-
 p:10,
-
 top:50,
-
 left:25
 };
 
@@ -382,20 +290,15 @@ left:25
    PELOTA
 ========================= */
 
-const resetBall = () => ({
-
-x:400,
-
-y:250,
-
+const resetBall=()=>({
+x:Math.random()*700+50,
+y:160,
 r:14,
-
-sx:isMobile ? 2 : 3,
-
-sy:isMobile ? 2 : 3
+sx:(Math.random()>0.5?1:-1)*(isMobile?2.5:3.5)*(1+level*0.005),
+sy:(isMobile?2.5:3.5)*(1+level*0.005)
 });
 
-balls = [resetBall()];
+balls=[resetBall()];
 
 /* =========================
    CREAR BLOQUES
@@ -406,25 +309,16 @@ function createBricks(){
 bricks=[];
 
 let comet=[];
-
 let double=[];
 
 while(comet.length<7){
-
 let n=Math.floor(Math.random()*30);
-
-if(!comet.includes(n))
-comet.push(n);
+if(!comet.includes(n)) comet.push(n);
 }
 
 while(double.length<4){
-
 let n=Math.floor(Math.random()*30);
-
-if(
-!double.includes(n) &&
-!comet.includes(n)
-){
+if(!double.includes(n)&&!comet.includes(n)){
 double.push(n);
 }
 }
@@ -438,18 +332,15 @@ for(let r=0;r<config.rows;r++){
 let i=c*config.rows+r;
 
 bricks[c][r]={
-
 x:0,
 y:0,
-
 status:1,
-
 type:
 comet.includes(i)
-? "comet"
-: double.includes(i)
-? "double"
-: "normal"
+?"comet"
+:double.includes(i)
+?"double"
+:"normal"
 };
 }
 }
@@ -463,18 +354,14 @@ createBricks();
 
 function saveRecord(name,score){
 
-let records =
-JSON.parse(
-localStorage.getItem("records")
-) || [];
+let records=
+JSON.parse(localStorage.getItem("records"))||[];
 
 records.push({name,score});
 
-records.sort((a,b)=>
-b.score-a.score
-);
+records.sort((a,b)=>b.score-a.score);
 
-records = records.slice(0,10);
+records=records.slice(0,10);
 
 localStorage.setItem(
 "records",
@@ -484,94 +371,63 @@ JSON.stringify(records)
 
 function showRecords(){
 
-ui.panel.style.display =
-
+ui.panel.style.display=
 ui.panel.style.display==="block"
-? "none"
-: "block";
+?"none":"block";
 
-let records =
-JSON.parse(
-localStorage.getItem("records")
-) || [];
+let records=
+JSON.parse(localStorage.getItem("records"))||[];
 
 ui.list.innerHTML="";
 
 records.forEach((r,i)=>{
 
-let li =
-document.createElement("li");
+let li=document.createElement("li");
 
-let medal =
-["🥇","🥈","🥉"][i] || "";
+let medal=["🥇","🥈","🥉"][i]||"";
 
-li.innerText =
-`${medal} ${r.name} - ${r.score}`;
+li.innerText=`${medal} ${r.name} - ${r.score}`;
 
 ui.list.appendChild(li);
-
 });
 }
 
-ui.records.onclick =
-showRecords;
+ui.records.onclick=showRecords;
 
 /* =========================
    START
 ========================= */
 
 ui.play.onclick=()=>{
-
 ui.menu.style.display="none";
-
 started=true;
-
 coin.play().catch(()=>{});
 };
 
 /* =========================
-   KEYBOARD
+   TECLADO
 ========================= */
 
 addEventListener("keydown",e=>{
-
-if(e.key==="ArrowRight")
-right=true;
-
-if(e.key==="ArrowLeft")
-left=true;
+if(e.key==="ArrowRight") right=true;
+if(e.key==="ArrowLeft") left=true;
 });
 
 addEventListener("keyup",e=>{
-
-if(e.key==="ArrowRight")
-right=false;
-
-if(e.key==="ArrowLeft")
-left=false;
+if(e.key==="ArrowRight") right=false;
+if(e.key==="ArrowLeft") left=false;
 });
 
 /* =========================
    TOUCH
 ========================= */
 
-canvas.addEventListener(
-"touchmove",
-e=>{
+canvas.addEventListener("touchmove",e=>{
 
-const rect =
-canvas.getBoundingClientRect();
+const rect=canvas.getBoundingClientRect();
+const scale=canvas.width/rect.width;
 
-const scale =
-canvas.width / rect.width;
-
-targetX =
-
-(e.touches[0].clientX-rect.left)
-
-* scale
-
-- paddle.width/2;
+targetX=(e.touches[0].clientX-rect.left)*scale-paddle.width/2;
 
 e.preventDefault();
 
@@ -582,10 +438,7 @@ e.preventDefault();
 ========================= */
 
 function drawPaddle(){
-
-ctx.fillStyle =
-paddle.color;
-
+ctx.fillStyle=paddle.color;
 ctx.fillRect(
 paddle.x,
 paddle.y,
@@ -603,12 +456,9 @@ function drawBalls(){
 balls.forEach(b=>{
 
 ctx.drawImage(
-
 asteroidImage,
-
 b.x-b.r,
 b.y-b.r,
-
 b.r*2,
 b.r*2
 );
@@ -617,20 +467,14 @@ b.r*2
 }
 
 /* =========================
-   DIBUJAR POWERUPS
+   POWERUPS
 ========================= */
 
 function drawPowerups(){
 
 powerups.forEach(p=>{
-
 ctx.font="28px Arial";
-
-ctx.fillText(
-p.icon,
-p.x,
-p.y
-);
+ctx.fillText(p.icon,p.x,p.y);
 });
 }
 
@@ -641,83 +485,48 @@ p.y
 function drawBricks(){
 
 for(let c=0;c<config.cols;c++){
-
 for(let r=0;r<config.rows;r++){
 
 let b=bricks[c][r];
 
-if(!b.status)
-continue;
+if(!b.status) continue;
 
-let x=
-c*(config.w+config.p)
-+ config.left;
-
-let y=
-r*(config.h+config.p)
-+ config.top;
+let x=c*(config.w+config.p)+config.left;
+let y=r*(config.h+config.p)+config.top;
 
 b.x=x;
 b.y=y;
 
-/* ===== ICONOS DETRAS ===== */
-
-ctx.globalAlpha = 0.25;
-
+ctx.globalAlpha=0.2;
 ctx.fillStyle="#fff";
-
 ctx.font="18px Arial";
 
 if(b.type==="comet"){
-
-ctx.fillText(
-"☄️",
-x+22,
-y+18
-);
+ctx.fillText("☄️",x+22,y+18);
 }
 
 if(b.type==="double"){
-
-ctx.fillText(
-"⚪⚪",
-x+12,
-y+18
-);
+ctx.fillText("⚪⚪",x+12,y+18);
 }
 
-/* ===== SOMBRA AMARILLA ===== */
-
-ctx.globalAlpha = 1;
+ctx.globalAlpha=1;
 
 if(b.type==="double"){
-
-ctx.shadowColor = "#ffd700";
-
-ctx.shadowBlur = 25;
-
-ctx.shadowOffsetX = 0;
-
-ctx.shadowOffsetY = 0;
-
+ctx.shadowColor="#ffd700";
+ctx.shadowBlur=20;
 }else{
-
-ctx.shadowBlur = 0;
+ctx.shadowBlur=0;
 }
-
-/* ===== LADRILLO ===== */
 
 ctx.drawImage(
-brickImage,
+level>=3 ? brickLevel3 : brickImage,
 x,
 y,
 config.w,
 config.h
 );
 
-/* ===== RESET ===== */
-
-ctx.shadowBlur = 0;
+ctx.shadowBlur=0;
 
 }
 }
@@ -727,47 +536,36 @@ ctx.shadowBlur = 0;
    NEXT LEVEL
 ========================= */
 
-function nextLevel(){
+function nextLevel(force=false){
 
-if(
-bricks.flat().every(
-b=>!b.status
-)
-){
+const noBlocks=bricks.flat().every(b=>!b.status);
+const enoughScore=score>=nextLevelScore;
 
-if(level===1){
+if(!noBlocks && !enoughScore && !force) return;
 
-level=2;
+level++;
 
-ui.level.innerText=2;
+ui.level.innerText=level;
 
-paddle.width =
-paddle.base;
+nextLevelScore+=15;
+
+lives++;
+
+ui.lives.innerText=lives;
+
+ui.life.style.width=Math.min((lives/5)*100,100)+"%";
+
+paddle.width=paddle.base;
 
 balls=[resetBall()];
 
-powerups=[];
+powerups.length=0;
 
 createBricks();
 
-alert("LEVEL 2");
-
-}else{
-
-let name="";
-
-while(!name.trim()){
-
-name = prompt(
-"¡GANASTE!\nIngresa tu nombre:"
-) || "";
-}
-
-saveRecord(name,score);
-
-location.reload();
-}
-}
+setTimeout(()=>{
+alert("LEVEL "+level);
+},100);
 }
 
 /* =========================
@@ -776,118 +574,86 @@ location.reload();
 
 function update(){
 
-if(!started)
-return;
+if(!started) return;
 
 /* ===== MOBILE ===== */
 
 if(isMobile){
 
-paddle.x +=
+paddle.x+=(targetX-paddle.x)*0.35;
 
-(targetX-paddle.x)
-* 0.35;
-
-paddle.x = Math.max(
-
+paddle.x=Math.max(
 0,
-
-Math.min(
-canvas.width-paddle.width,
-paddle.x
-));
+Math.min(canvas.width-paddle.width,paddle.x)
+);
 }
 
 /* ===== PC ===== */
 
-if(
-right &&
-paddle.x+paddle.width<canvas.width
-){
-paddle.x += paddle.speed;
+if(right&&paddle.x+paddle.width<canvas.width){
+paddle.x+=paddle.speed;
 }
 
-if(
-left &&
-paddle.x>0
-){
-paddle.x -= paddle.speed;
+if(left&&paddle.x>0){
+paddle.x-=paddle.speed;
 }
 
 /* ===== BALLS ===== */
 
 balls.forEach(ball=>{
 
-ball.x += ball.sx;
-
-ball.y += ball.sy;
+ball.x+=ball.sx;
+ball.y+=ball.sy;
 
 /* ===== WALLS ===== */
 
-if(
-ball.x+ball.r>canvas.width ||
-ball.x-ball.r<0
-){
-ball.sx *= -1;
+if(ball.x+ball.r>canvas.width||ball.x-ball.r<0){
+ball.sx*=-1;
 }
 
 if(ball.y-ball.r<0){
-ball.sy *= -1;
+ball.sy*=-1;
 }
 
-/* ===== PADDLE ===== */
+/* ===== BARRA ===== */
 
 if(
-
 ball.y+ball.r>paddle.y &&
-
 ball.x>paddle.x &&
-
 ball.x<paddle.x+paddle.width &&
-
 ball.sy>0
-
 ){
 
-ball.sy =
--Math.abs(ball.sy);
+ball.sy=-Math.abs(ball.sy);
 
 score++;
 
-ui.score.innerText =
-score;
+ui.score.innerText=score;
 
 pop.currentTime=0;
-
+pop.volume=0.4;
 pop.play().catch(()=>{});
 
 if(score%5===0){
 
-paddle.color =
+paddle.color=
+colors[Math.floor(Math.random()*colors.length)];
 
-colors[
-Math.floor(
-Math.random()*colors.length
-)];
-
-if(level===1){
-paddle.width *= 1.005;
-}
+paddle.width*=1.005;
 }
 
 if(score%20===0){
 
+requestAnimationFrame(()=>{
+
 balls.push({
-
 ...resetBall(),
-
 x:ball.x,
-
 y:ball.y,
-
 sx:-ball.sx,
-
 sy:ball.sy
+});
+
 });
 }
 }
@@ -895,55 +661,47 @@ sy:ball.sy
 /* ===== BLOQUES ===== */
 
 for(let c=0;c<config.cols;c++){
-
 for(let r=0;r<config.rows;r++){
 
 let b=bricks[c][r];
 
-if(!b.status)
-continue;
+if(!b.status) continue;
 
 if(
-
 ball.x+ball.r>b.x &&
-
 ball.x-ball.r<b.x+config.w &&
-
 ball.y+ball.r>b.y &&
-
 ball.y-ball.r<b.y+config.h
-
 ){
 
 b.status=0;
-
-ball.sy *= -1;
+ball.sy*=-1;
 
 if(b.type==="comet"){
 
+requestAnimationFrame(()=>{
+
 powerups.push({
-
 x:b.x+20,
-
 y:b.y+20,
-
 icon:"☄️"
+});
+
 });
 }
 
 if(b.type==="double"){
 
+requestAnimationFrame(()=>{
+
 balls.push({
-
 ...resetBall(),
-
 x:ball.x,
-
 y:ball.y,
-
 sx:-ball.sx,
-
 sy:ball.sy
+});
+
 });
 }
 
@@ -960,23 +718,16 @@ lives--;
 
 ui.lives.innerText=lives;
 
-ui.life.style.width=
-(lives/3)*100+"%";
+ui.life.style.width=(lives/5)*100+"%";
 
-Object.assign(
-ball,
-resetBall()
-);
+Object.assign(ball,resetBall());
 
 if(lives<=0){
 
 let name="";
 
 while(!name.trim()){
-
-name = prompt(
-"GAME OVER\nIngresa tu nombre:"
-) || "";
+name=prompt("GAME OVER\nIngresa tu nombre:")||"";
 }
 
 saveRecord(name,score);
@@ -984,40 +735,39 @@ saveRecord(name,score);
 location.reload();
 }
 }
+
 });
 
 /* ===== POWERUPS ===== */
 
-powerups.forEach((p,i)=>{
+for(let i=powerups.length-1;i>=0;i--){
 
-p.y += 3;
+const p=powerups[i];
+
+p.y+=3;
 
 if(
-
 p.y>paddle.y &&
-
 p.x>paddle.x &&
-
 p.x<paddle.x+paddle.width
-
 ){
 
-paddle.width *= 1.15;
+paddle.width*=1.08;
 
-paddle.color =
-
-colors[
-Math.floor(
-Math.random()*colors.length
-)];
+paddle.color=
+colors[Math.floor(Math.random()*colors.length)];
 
 coin.currentTime=0;
-
+coin.volume=0.4;
 coin.play().catch(()=>{});
 
 powerups.splice(i,1);
 }
-});
+
+if(p.y>canvas.height+50){
+powerups.splice(i,1);
+}
+}
 }
 
 /* =========================
@@ -1026,21 +776,12 @@ powerups.splice(i,1);
 
 function loop(){
 
-ctx.clearRect(
-0,
-0,
-canvas.width,
-canvas.height
-);
+ctx.clearRect(0,0,canvas.width,canvas.height);
 
 drawPaddle();
-
 drawBalls();
-
 drawBricks();
-
 drawPowerups();
-
 update();
 
 requestAnimationFrame(loop);
@@ -1052,3 +793,4 @@ loop();
 
 </body>
 </html>
+
