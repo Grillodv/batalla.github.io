@@ -2,23 +2,19 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>Arcade - Fixed Menu</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{background:radial-gradient(circle,#111827,#050816);overflow:hidden;font-family:Arial,sans-serif;color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:center;touch-action:none}
+        body{background:radial-gradient(circle,#111827,#050816);overflow:hidden;font-family:Arial,sans-serif;color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:center}
         
-        /* --- MENÚ PRINCIPAL (Ajustado para Vertical) --- */
+        /* --- MENÚ PRINCIPAL (Restaurado) --- */
         .menu{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,.9);z-index:10}
-        .menu-buttons{
-            display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-            width:95vw;max-width:900px;height:auto;aspect-ratio:9/5;
-            background:url("Images/menu.png") no-repeat center;background-size:contain
-        }
+        .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;width:900px;height:500px;background:url("Images/menu.png") no-repeat center;background-size:contain}
 
         .menu-btn, .back-btn{
             display:flex;align-items:center;justify-content:center;gap:10px;
-            width:280px;height:80px;
+            width:280px;height:80px; /* Tamaño original restaurado */
             border:none;outline:none;background:transparent;position:relative;
             font-size:1.1rem;font-weight:bold;color:#fff;cursor:pointer;transition:.2s;
             text-shadow:0 0 6px #000;
@@ -28,14 +24,14 @@
         }
         .menu-btn:hover{transform:scale(1.05)}
 
-        /* --- PANTALLA DE NIVEL --- */
+        /* --- PANTALLA DE NIVEL (El botón pequeño) --- */
         .level-up-screen{
             position:fixed;inset:0;display:none;justify-content:center;align-items:center;
             background:rgba(0,0,0,0.6);z-index:30;
         }
         .level-display{
             display:flex;align-items:center;justify-content:center;gap:12px;
-            width:240px;height:75px;
+            width:240px;height:75px; /* Tamaño ajustado para nivel */
             background:url("Images/boton_base.png") no-repeat center;
             background-size:contain;
             border:none; outline:none; cursor:pointer;
@@ -44,30 +40,18 @@
             text-transform: uppercase;
             transition: transform 0.2s;
         }
+        .level-display:hover{transform:scale(1.05)}
+        .level-display img{width:28px;height:28px;object-fit:contain}
 
-        /* --- RÉCORDS (Ajustado para Vertical) --- */
+        /* --- RESTO DE LA INTERFAZ --- */
         .records-screen{position:fixed;inset:0;display:none;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:20}
-        .records-content{
-            position:relative;width:95vw;max-width:540px;height:auto;aspect-ratio:1/1;
-            background:url("Images/records.png") no-repeat center;background-size:contain;
-            display:flex;flex-direction:column;align-items:center;padding-top:20%
-        }
+        .records-content{position:relative;width:540px;height:540px;background:url("Images/records.png") no-repeat center;background-size:contain;display:flex;flex-direction:column;align-items:center;padding-top:110px}
         
-        /* --- CONTENEDOR DE JUEGO (Ajuste Responsivo) --- */
-        .game-container{width:100%;display:flex;flex-direction:column;align-items:center;padding:10px}
-        .hud{
-            width:100%;max-width:800px;display:flex;justify-content:space-between;align-items:center;
-            margin-bottom:10px;color:#00e5ff;font-weight:bold;font-size:0.9rem;padding:0 5px;
-        }
-        .life-container{width:100px;height:18px;background:#111;border:2px solid #00e5ff;border-radius:20px;overflow:hidden}
+        .game-container{width:100%;max-width:900px;display:flex;flex-direction:column;align-items:center;padding:10px}
+        .hud{width:100%;max-width:800px;display:flex;justify-content:center;gap:20px;margin-bottom:10px;color:#00e5ff;font-weight:bold}
+        .life-container{width:160px;height:20px;background:#111;border:2px solid #00e5ff;border-radius:20px;overflow:hidden}
         .life-bar{height:100%;background:lime;transition:.3s;width:100%}
-        
-        canvas{
-            background:#000;border:3px solid #00e5ff;border-radius:10px;box-shadow:0 0 20px #00e5ff;
-            width:100vw;max-width:800px;height:auto;
-            touch-action:none;
-            padding-bottom: 60px; /* Zona de toque debajo de la paleta */
-        }
+        canvas{background:#000;border:3px solid #00e5ff;border-radius:10px;box-shadow:0 0 20px #00e5ff;width:100%;max-width:800px;touch-action:none}
     </style>
 </head>
 <body>
@@ -99,16 +83,18 @@
         <div>❤️ <span id="lives">5</span></div>
         <div class="life-container"><div class="life-bar" id="lifeBar"></div></div>
         <div>⭐ <span id="score">0</span></div>
-        <div>LVL <span id="levelText">1</span></div>
+        <div>LEVEL <span id="levelText">1</span></div>
     </div>
     <canvas id="game" width="800" height="500"></canvas>
 </div>
 
 <script>
+// ... (Toda la lógica de JavaScript se mantiene igual que la anterior)
 const $ = e => document.getElementById(e);
 const canvas = $("game"), ctx = canvas.getContext("2d");
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+// Recursos
 const wallImage = new Image(); wallImage.src = "Images/pared.png";
 const level3Image = new Image(); level3Image.src = "Images/ladrillo.png";
 const asteroidImage = new Image(); asteroidImage.src = "Images/asteroide.png";
@@ -181,6 +167,7 @@ function nextLevel() {
     if (changingLevel) return;
     const noBricks = bricks.flat().every(b => !b.status);
     if (!noBricks && score < nextLevelScore) return;
+
     changingLevel = true;
     level++;
     nextLevelScore += 15;
@@ -201,6 +188,7 @@ ui.levelContinueBtn.onclick = () => {
 
 function update() {
     if (!started || changingLevel) return;
+
     if (isMobile) {
         paddle.x += (targetX - paddle.x) * 0.22;
     } else {
@@ -212,6 +200,7 @@ function update() {
     for (let i = balls.length - 1; i >= 0; i--) {
         let b = balls[i];
         b.x += b.sx; b.y += b.sy;
+
         if (b.x + b.r > canvas.width || b.x - b.r < 0) b.sx *= -1;
         if (b.y - b.r < 0) b.sy *= -1;
 
@@ -221,9 +210,11 @@ function update() {
             b.sy = -Math.abs(b.sy);
             score++; updateHUD();
             pop.currentTime = 0; pop.play().catch(() => {});
+            
             if (score > 0 && score % 10 === 0) {
                 powerups.push({ x: Math.random() * (canvas.width - 50) + 25, y: -50, type: "extraLife" });
             }
+
             if (score % 5 === 0) {
                 paddle.width *= 1.01;
                 paddle.color = colors[Math.floor(Math.random() * colors.length)];
@@ -248,7 +239,8 @@ function update() {
         }
 
         if (b.y - b.r > canvas.height) {
-            shakeTime = 12; shakeIntensity = 10;
+            shakeTime = 12;
+            shakeIntensity = 10;
             fireEffects.push({ x: b.x - 40, y: paddle.y - 40, frame: 0, timer: 0 });
             balls.splice(i, 1);
             lives--; updateHUD();
@@ -280,6 +272,7 @@ function draw() {
         shakeTime--;
     }
     ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
+    
     ctx.fillStyle = paddle.color;
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
     balls.forEach(b => ctx.drawImage(asteroidImage, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2));
@@ -315,17 +308,12 @@ function loop() { update(); draw(); requestAnimationFrame(loop); }
 createBricks();
 balls = [resetBall()];
 updateHUD();
-
 ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coin.play().catch(() => {}); };
 addEventListener("keydown", e => { if (e.key === "ArrowRight") right = true; if (e.key === "ArrowLeft") left = true; });
 addEventListener("keyup", e => { if (e.key === "ArrowRight") right = false; if (e.key === "ArrowLeft") left = false; });
-
-// MEJORA: El toque se detecta en el canvas pero permite mover el dedo por debajo
 canvas.addEventListener("touchmove", e => {
     const rect = canvas.getBoundingClientRect();
-    const touchX = e.touches[0].clientX - rect.left;
-    // Solo usamos la X para mover la paleta, permitiendo al jugador tocar más abajo
-    targetX = (touchX * (canvas.width / rect.width)) - paddle.width / 2;
+    targetX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width) - paddle.width / 2;
     e.preventDefault();
 }, { passive: false });
 
