@@ -3,53 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>Arcade Space - Final Edition</title>
+    <title>Arcade Space - Original Feel</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        body{background:radial-gradient(circle,#111827,#050816);overflow:hidden;font-family:Arial,sans-serif;color:#fff;min-height:100vh;display:flex;justify-content:center;align-items:center}
+        body{background:radial-gradient(circle,#111827,#050816);overflow:hidden;font-family:Arial,sans-serif;color:#fff;min-height:100vh;display:flex;justify-content:center}
         
-        /* --- MENÚ PRINCIPAL --- */
-        .menu{position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,.9);z-index:10}
-        .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;width:900px;height:500px;background:url("Images/menu.png") no-repeat center;background-size:contain}
+        /* --- MENÚS --- */
+        .menu, .records-screen, .level-up-screen { position:fixed;inset:0;display:flex;justify-content:center;align-items:center;z-index:100; }
+        .menu { background:rgba(0,0,0,.9); }
+        .level-up-screen { background:rgba(0,0,0,0.6); display:none; }
+        
+        .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;width:100%;max-width:900px;height:500px;background:url("Images/menu.png") no-repeat center;background-size:contain}
 
-        .menu-btn, .back-btn{
+        .menu-btn, .back-btn, .level-display{
             display:flex;align-items:center;justify-content:center;gap:10px;
             width:280px;height:80px;
             border:none;outline:none;background:transparent;position:relative;
             font-size:1.1rem;font-weight:bold;color:#fff;cursor:pointer;transition:.2s;
             text-shadow:0 0 6px #000;
         }
-        .menu-btn::before, .back-btn::before{
+        .menu-btn::before, .back-btn::before, .level-display::before{
             content:"";position:absolute;inset:0;background:url("Images/boton_base.png") no-repeat center;background-size:contain;z-index:-1;
         }
-        .menu-btn:hover{transform:scale(1.05)}
 
-        /* --- PANTALLA DE NIVEL (BOTÓN AJUSTADO) --- */
-        .level-up-screen{
-            position:fixed;inset:0;display:none;justify-content:center;align-items:center;
-            background:rgba(0,0,0,0.6);z-index:30;
-        }
-        .level-display{
-            display:flex;align-items:center;justify-content:center;gap:12px;
-            width:220px;height:70px;
-            background:url("Images/boton_base.png") no-repeat center;
-            background-size:contain;
-            border:none; outline:none; cursor:pointer;
-            font-size:1rem;font-weight:bold;color:#fff;
-            text-shadow:0 0 8px #000;
-            text-transform: uppercase;
-        }
-        .level-display img{width:24px;height:24px;object-fit:contain}
-
-        /* --- JUEGO RESPONSIVO --- */
+        /* --- POSICIONAMIENTO HACIA ARRIBA --- */
         .game-container {
             width: 100vw;
             height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 5px;
+            justify-content: flex-start; /* Mueve el juego arriba */
+            padding-top: 15px; 
         }
 
         canvas {
@@ -57,29 +42,31 @@
             border: 3px solid #00e5ff;
             border-radius: 10px;
             box-shadow: 0 0 20px #00e5ff;
-            /* Tamaño dinámico para móvil */
-            width: 98vw;
-            max-width: 800px;
-            height: auto;
-            max-height: 70vh; /* Espacio para el HUD y para que el dedo no tape abajo */
+            
+            width: 96vw;          
+            max-width: 800px; 
+            height: auto;         
+            max-height: 78vh;    /* Altura extendida hacia arriba */
+            
             touch-action: none;
         }
 
         .hud {
-            width: 98vw;
+            width: 96vw;
             max-width: 800px;
             display: flex;
-            justify-content: space-around;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 8px;
-            font-size: 0.85rem;
             color: #00e5ff;
             font-weight: bold;
+            font-size: 0.9rem;
         }
 
-        .life-container{width:120px;height:16px;background:#111;border:2px solid #00e5ff;border-radius:20px;overflow:hidden}
+        .life-container{width:100px;height:14px;background:#111;border:2px solid #00e5ff;border-radius:20px;overflow:hidden}
         .life-bar{height:100%;background:lime;transition:.3s;width:100%}
         
-        .records-screen{position:fixed;inset:0;display:none;justify-content:center;align-items:center;background:rgba(0,0,0,.95);z-index:20}
+        .records-screen{display:none; background:rgba(0,0,0,.95); z-index:110;}
         .records-content{position:relative;width:540px;height:540px;background:url("Images/records.png") no-repeat center;background-size:contain;display:flex;flex-direction:column;align-items:center;padding-top:110px}
     </style>
 </head>
@@ -87,23 +74,23 @@
 
 <div class="menu" id="menu">
     <div class="menu-buttons">
-        <button class="menu-btn" id="playBtn"><img src="Images/iniciar.png"> <span>INICIAR</span></button>
-        <button class="menu-btn" id="recordsBtn"><img src="Images/copa.png"> <span>RECORDS</span></button>
+        <button class="menu-btn" id="playBtn"><img src="Images/iniciar.png" width="30"> <span>INICIAR</span></button>
+        <button class="menu-btn" id="recordsBtn"><img src="Images/copa.png" width="30"> <span>RECORDS</span></button>
     </div>
 </div>
 
 <div class="level-up-screen" id="levelUpScreen">
     <button class="level-display" id="levelContinueBtn">
-        <img src="Images/iniciar.png"> 
+        <img src="Images/iniciar.png" width="20"> 
         <span id="levelUpText">NIVEL 1</span>
     </button>
 </div>
 
 <div class="records-screen" id="recordsScreen">
     <div class="records-content">
-        <h2>TOP LOCAL</h2>
-        <ol id="recordsList"></ol>
-        <button class="back-btn" id="backBtn"><img src="Images/regresar.png"> <span>REGRESAR</span></button>
+        <h2 style="margin-bottom:10px">TOP LOCAL</h2>
+        <ol id="recordsList" style="list-style:none; padding:0;"></ol>
+        <button class="back-btn" id="backBtn" style="margin-top:20px"><span>REGRESAR</span></button>
     </div>
 </div>
 
@@ -122,14 +109,14 @@ const $ = e => document.getElementById(e);
 const canvas = $("game"), ctx = canvas.getContext("2d");
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-// Imágenes
-const wallImage = new Image(); wallImage.src = "Images/pared.png";
-const level3Image = new Image(); level3Image.src = "Images/ladrillo.png";
-const asteroidImage = new Image(); asteroidImage.src = "Images/asteroide.png";
-const cometSprite = new Image(); cometSprite.src = "Images/cometa.png";
-const fireSprite = new Image(); fireSprite.src = "Images/fuego.png";
-const hitSprite = new Image(); hitSprite.src = "Images/explosion.png";
-const coin = new Audio("Sounds/coin.mp3"), pop = new Audio("Sounds/burbuja.mp3");
+// Carga de recursos
+const wallImg = new Image(); wallImg.src = "Images/pared.png";
+const brickLvl3 = new Image(); brickLvl3.src = "Images/ladrillo.png";
+const ballImg = new Image(); ballImg.src = "Images/asteroide.png";
+const powerupImg = new Image(); powerupImg.src = "Images/cometa.png";
+const fireImg = new Image(); fireImg.src = "Images/fuego.png";
+const hitImg = new Image(); hitImg.src = "Images/explosion.png";
+const coinSnd = new Audio("Sounds/coin.mp3"), popSnd = new Audio("Sounds/burbuja.mp3");
 
 const ui = {
     menu: $("menu"), play: $("playBtn"), records: $("recordsBtn"),
@@ -139,64 +126,52 @@ const ui = {
     levelContinueBtn: $("levelContinueBtn")
 };
 
-// Configuración Inicial
 let score = 0, lives = 5, maxLives = 5, level = 1, nextLevelScore = 15;
 let started = false, changingLevel = false, targetX = 340;
 let right = false, left = false;
 let balls = [], bricks = [], powerups = [], fireEffects = [], hitEffects = [];
-let shakeTime = 0, shakeIntensity = 0;
+let shakeTime = 0;
 
-const colors = ["#ffbf00", "#00e5ff", "#ff3b3b", "#8a2be2", "#00ff99", "#ff66cc"];
-const GOLDEN_GLOW = "#FFD700";
-
+// Paleta con Colores y Estética Original
+const paddleColors = ["#00e5ff", "#ff00ff", "#00ff00", "#ffff00", "#ff0000", "#ffffff"];
 const paddle = { 
-    base: isMobile ? 140 : 120, width: isMobile ? 140 : 120, 
-    height: 15, x: 340, y: 460, speed: 8, color: "#00e5ff" 
+    width: isMobile ? 140 : 120, height: 15, x: 340, y: 460, speed: 8,
+    color: "#00e5ff" 
 };
 
-const config = { rows: 3, cols: 10, w: 70, h: 25, p: 10, top: 50, left: 25 };
+const config = { rows: 3, cols: 10, w: 70, h: 25, p: 10, top: 70, left: 25 };
 
 function updateHUD() {
     ui.lives.innerText = lives;
     ui.score.innerText = score;
     ui.level.innerText = level;
-    ui.life.style.width = Math.min((lives / maxLives) * 100, 100) + "%";
+    ui.life.style.width = (lives / maxLives * 100) + "%";
 }
 
 const resetBall = () => ({
-    x: Math.random() * (canvas.width - 100) + 50,
-    y: config.top + (config.rows * (config.h + config.p)) + 50,
-    r: 14,
-    sx: (isMobile ? 2.5 : 3) * (1 + (level - 1) * 0.05),
-    sy: (isMobile ? 2.5 : 3) * (1 + (level - 1) * 0.05)
+    x: canvas.width / 2, y: 400, r: 14,
+    sx: (isMobile ? 2.8 : 3.5) * (1 + (level - 1) * 0.1),
+    sy: (isMobile ? -2.8 : -3.5) * (1 + (level - 1) * 0.1)
 });
 
 function createBricks() {
     bricks = [];
-    let specialIds = new Set();
-    while(specialIds.size < 11) specialIds.add(Math.floor(Math.random() * 30));
-    const specialArr = Array.from(specialIds);
-
     for (let c = 0; c < config.cols; c++) {
         bricks[c] = [];
         for (let r = 0; r < config.rows; r++) {
-            let i = c * config.rows + r;
             bricks[c][r] = {
                 x: c * (config.w + config.p) + config.left,
                 y: r * (config.h + config.p) + config.top,
                 status: 1,
-                type: specialArr.indexOf(i) < 7 && specialArr.indexOf(i) !== -1 ? "comet" : 
-                      specialArr.indexOf(i) >= 7 ? "double" : "normal"
+                type: Math.random() > 0.85 ? "grow" : "normal"
             };
         }
     }
 }
 
 function nextLevel() {
-    if (changingLevel) return;
     const noBricks = bricks.flat().every(b => !b.status);
     if (!noBricks && score < nextLevelScore) return;
-
     changingLevel = true;
     level++;
     nextLevelScore += 15;
@@ -208,19 +183,16 @@ function nextLevel() {
 
 ui.levelContinueBtn.onclick = () => {
     ui.levelUpScreen.style.display = "none";
-    paddle.width = paddle.base;
     createBricks();
     balls = [resetBall()];
     changingLevel = false;
-    coin.play().catch(() => {});
 };
 
 function update() {
     if (!started || changingLevel) return;
 
-    if (isMobile) {
-        paddle.x += (targetX - paddle.x) * 0.25; // Movimiento suave hacia el dedo
-    } else {
+    if (isMobile) paddle.x += (targetX - paddle.x) * 0.25;
+    else {
         if (right && paddle.x + paddle.width < canvas.width) paddle.x += paddle.speed;
         if (left && paddle.x > 0) paddle.x -= paddle.speed;
     }
@@ -233,13 +205,24 @@ function update() {
         if (b.x + b.r > canvas.width || b.x - b.r < 0) b.sx *= -1;
         if (b.y - b.r < 0) b.sy *= -1;
 
+        // Rebote en paleta: FUNCIONALIDAD COLOR Y CRECIMIENTO
         if (b.sy > 0 && b.y + b.r >= paddle.y && b.y - b.r <= paddle.y + paddle.height &&
             b.x > paddle.x && b.x < paddle.x + paddle.width) {
-            b.y = paddle.y - b.r;
+            
             b.sy = -Math.abs(b.sy);
-            score++; updateHUD();
-            pop.currentTime = 0; pop.play().catch(() => {});
-            if (score % 20 === 0) balls.push({ ...resetBall(), x: b.x, y: b.y, sx: -b.sx });
+            score++; 
+            
+            // Efectos de la paleta
+            paddle.color = paddleColors[Math.floor(Math.random() * paddleColors.length)];
+            paddle.width += 2; 
+            
+            updateHUD();
+            popSnd.currentTime = 0; popSnd.play().catch(()=>{});
+
+            // Premio cada 10 puntos (Vida)
+            if (score > 0 && score % 10 === 0) {
+                powerups.push({ x: b.x, y: b.y, type: "life" });
+            }
             nextLevel();
         }
 
@@ -249,8 +232,8 @@ function update() {
                 if (bk.status && b.x + b.r > bk.x && b.x - b.r < bk.x + config.w &&
                     b.y + b.r > bk.y && b.y - b.r < bk.y + config.h) {
                     bk.status = 0; b.sy *= -1;
-                    hitEffects.push({ x: bk.x + 5, y: bk.y - 10, frame: 0, timer: 0 });
-                    if (bk.type === "comet") powerups.push({ x: bk.x + 15, y: bk.y, type: "grow" });
+                    hitEffects.push({ x: bk.x, y: bk.y, frame: 0, timer: 0 });
+                    if (bk.type === "grow") powerups.push({ x: bk.x, y: bk.y, type: "grow" });
                     nextLevel();
                     break brickSearch;
                 }
@@ -258,58 +241,62 @@ function update() {
         }
 
         if (b.y - b.r > canvas.height) {
-            shakeTime = 12; shakeIntensity = 10;
+            shakeTime = 10;
             fireEffects.push({ x: b.x - 40, y: paddle.y - 40, frame: 0, timer: 0 });
             balls.splice(i, 1);
-            lives--; updateHUD();
-            if (lives <= 0) {
-                let name = prompt("GAME OVER\nNombre:") || "Piloto";
-                saveRecord(name, score);
-                location.reload();
-            } else if (balls.length === 0) {
-                balls.push(resetBall());
+            if (balls.length === 0) {
+                lives--; updateHUD();
+                if (lives <= 0) { 
+                    saveRecord("Piloto", score);
+                    location.reload(); 
+                } else { balls.push(resetBall()); }
             }
         }
     }
 
     for (let i = powerups.length - 1; i >= 0; i--) {
-        let p = powerups[i]; p.y += 1.5;
-        if (p.y + 40 >= paddle.y && p.y <= paddle.y + paddle.height && p.x + 40 > paddle.x && p.x < paddle.x + paddle.width) {
-            paddle.width *= 1.15;
-            coin.currentTime = 0; coin.play().catch(() => {});
+        let p = powerups[i]; p.y += 2.5;
+        if (p.y + 30 >= paddle.y && p.x + 30 > paddle.x && p.x < paddle.x + paddle.width) {
+            if (p.type === "life") { lives = Math.min(lives + 1, maxLives); updateHUD(); }
+            else if (p.type === "grow") { paddle.width += 30; }
+            coinSnd.currentTime = 0; coinSnd.play().catch(()=>{});
             powerups.splice(i, 1);
-        } else if (p.y >= canvas.height) powerups.splice(i, 1);
+        } else if (p.y > canvas.height) powerups.splice(i, 1);
     }
 }
 
 function draw() {
     ctx.save();
-    if (shakeTime > 0) {
-        ctx.translate((Math.random() - 0.5) * shakeIntensity, (Math.random() - 0.5) * shakeIntensity);
-        shakeTime--;
-    }
-    ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
+    if (shakeTime > 0) { ctx.translate(Math.random()*5, Math.random()*5); shakeTime--; }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     
+    // Paleta con Brillo
     ctx.fillStyle = paddle.color;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = paddle.color;
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
-    balls.forEach(b => ctx.drawImage(asteroidImage, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2));
+    ctx.shadowBlur = 0; 
+    
+    balls.forEach(b => ctx.drawImage(ballImg, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2));
+    
     for (let c = 0; c < config.cols; c++) {
         for (let r = 0; r < config.rows; r++) {
             let b = bricks[c][r];
-            if (b.status) ctx.drawImage(level >= 3 ? level3Image : wallImage, b.x, b.y, config.w, config.h);
+            if (b.status) ctx.drawImage(level >= 3 ? brickLvl3 : wallImg, b.x, b.y, config.w, config.h);
         }
     }
-    powerups.forEach(p => ctx.drawImage(cometSprite, p.x, p.y, 42, 42));
+    
+    powerups.forEach(p => ctx.drawImage(powerupImg, p.x, p.y, 40, 40));
+
     fireEffects.forEach((f, i) => {
-        const fw = fireSprite.width / 6;
-        ctx.drawImage(fireSprite, Math.floor(f.frame) * fw, 0, fw, fireSprite.height, f.x, f.y, 80, 80);
-        f.timer++; if (f.timer % 5 === 0) f.frame++;
+        ctx.drawImage(fireImg, Math.floor(f.frame)*128, 0, 128, 128, f.x, f.y, 80, 80);
+        f.timer++; if (f.timer % 4 === 0) f.frame++;
         if (f.frame >= 6) fireEffects.splice(i, 1);
     });
+
     hitEffects.forEach((h, i) => {
-        const fw = hitSprite.width / 6;
-        ctx.drawImage(hitSprite, Math.floor(h.frame) * fw, 0, fw, hitSprite.height, h.x, h.y, 60, 60);
-        h.timer++; if (h.timer % 3 === 0) h.frame++;
+        ctx.drawImage(hitImg, Math.floor(h.frame)*128, 0, 128, 128, h.x, h.y, 60, 60);
+        h.timer++; if (h.timer % 4 === 0) h.frame++;
         if (h.frame >= 6) hitEffects.splice(i, 1);
     });
     ctx.restore();
@@ -321,36 +308,24 @@ createBricks();
 balls = [resetBall()];
 updateHUD();
 
-// Eventos
-ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coin.play().catch(() => {}); };
-
-addEventListener("keydown", e => { if (e.key === "ArrowRight") right = true; if (e.key === "ArrowLeft") left = true; });
-addEventListener("keyup", e => { if (e.key === "ArrowRight") right = false; if (e.key === "ArrowLeft") left = false; });
-
+ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; };
 canvas.addEventListener("touchmove", e => {
     const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const scaleX = canvas.width / rect.width;
-    // Permite controlar la barra aunque el dedo esté mucho más abajo
-    targetX = (touch.clientX - rect.left) * scaleX - paddle.width / 2;
+    targetX = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width) - paddle.width / 2;
     e.preventDefault();
 }, { passive: false });
 
-function saveRecord(name, score) {
-    let records = JSON.parse(localStorage.getItem("records")) || [];
-    records.push({ name, score });
-    records.sort((a, b) => b.score - a.score);
-    localStorage.setItem("records", JSON.stringify(records.slice(0, 10)));
+function saveRecord(n, s) {
+    let r = JSON.parse(localStorage.getItem("records")) || [];
+    r.push({ name: n, score: s });
+    r.sort((a, b) => b.score - a.score);
+    localStorage.setItem("records", JSON.stringify(r.slice(0, 5)));
 }
 
 ui.records.onclick = () => {
     ui.menu.style.display = "none"; $("recordsScreen").style.display = "flex";
-    ui.list.innerHTML = "";
-    (JSON.parse(localStorage.getItem("records")) || []).forEach((r, i) => {
-        let li = document.createElement("li");
-        li.innerText = `${["🥇", "🥈", "🥉"][i] || ""} ${r.name} - ${r.score}`;
-        ui.list.appendChild(li);
-    });
+    ui.list.innerHTML = (JSON.parse(localStorage.getItem("records")) || [])
+        .map(r => `<li>${r.name}: ${r.score} pts</li>`).join("");
 };
 $("backBtn").onclick = () => { $("recordsScreen").style.display = "none"; ui.menu.style.display = "flex"; };
 
