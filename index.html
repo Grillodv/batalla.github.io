@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>Arcade Space Pro - PC & Mobile HUD</title>
+    <title>Arcade Space Pro - Final Edition</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{
@@ -28,7 +28,7 @@
             padding: 5px;
         }
 
-        /* --- HUD BASE (Móvil por defecto) --- */
+        /* --- HUD BASE (Móvil) --- */
         .hud {
             width: 100%;
             max-width: 800px;
@@ -53,16 +53,16 @@
         }
         .life-bar { height: 100%; background: lime; width: 100%; transition: width 0.3s; }
 
-        /* --- HUD PARA PC (Más grande) --- */
+        /* --- HUD PARA PC --- */
         @media (min-width: 768px) {
             .hud {
-                font-size: 1.2rem; /* Texto más grande en PC */
+                font-size: 1.2rem;
                 gap: 30px;
                 margin-bottom: 15px;
             }
             .life-container {
-                width: 150px; /* Barra más larga */
-                height: 18px; /* Barra más gruesa */
+                width: 150px;
+                height: 18px;
                 border: 2px solid #00e5ff;
             }
         }
@@ -78,10 +78,15 @@
             touch-action: none;
         }
 
-        /* --- RESPONSIVE ADAPTATIONS --- */
+        /* --- AJUSTE POSICIÓN MÓVIL --- */
         @media (max-aspect-ratio: 1/1) { 
-            body { padding-top: 10px; } 
-            canvas { width: 98vw; max-height: 45vh; }
+            body { 
+                padding-top: 40px; /* Despegado un poco de la parte superior */
+            } 
+            canvas { 
+                width: 98vw; 
+                max-height: 45vh; 
+            }
         }
 
         @media (min-aspect-ratio: 1/1) and (max-height: 550px) {
@@ -91,6 +96,7 @@
             .life-container { width: 60px; height: 6px; }
         }
 
+        /* Menús */
         .menu, .records-screen, .level-up-screen {position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.9);z-index:100}
         .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;width:90vw;max-width:600px;height:400px;background:url("Images/menu.png") no-repeat center;background-size:contain}
         .menu-btn, .back-btn, .level-display{
@@ -141,6 +147,7 @@ const $ = e => document.getElementById(e);
 const canvas = $("game"), ctx = canvas.getContext("2d");
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+// Assets
 const wallImg = new Image(); wallImg.src = "Images/pared.png";
 const lvl3Img = new Image(); lvl3Img.src = "Images/ladrillo.png";
 const astImg = new Image(); astImg.src = "Images/asteroide.png";
@@ -183,7 +190,7 @@ function updateHUD() {
 const resetBall = () => ({
     x: Math.random() * 700 + 50,
     y: 300,
-    r: 15,
+    r: 15, 
     sx: (isMobile ? 2.6 : 3.6) * (1 + (level - 1) * 0.08),
     sy: (isMobile ? 2.6 : 3.6) * (1 + (level - 1) * 0.08)
 });
