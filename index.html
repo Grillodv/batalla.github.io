@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>Arcade Space Unified</title>
+    <title>Arcade Space Pro</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{
             background:radial-gradient(circle,#111827,#050816);
             overflow:hidden;
-            font-family:Arial,sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             color:#fff;
             min-height:100vh;
             display:flex;
@@ -18,88 +18,98 @@
             align-items:center
         }
         
-        /* Contenedor principal que se adapta */
         .game-container {
             width: 100%;
             max-width: 900px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            padding: 5px;
         }
 
-        /* El Canvas ahora es elástico */
+        /* HUD Minimalista */
+        .hud {
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+            color: #00e5ff;
+            font-weight: bold;
+            font-size: 0.8rem; /* Texto más pequeño */
+            text-shadow: 0 0 5px rgba(0,229,255,0.5);
+        }
+
+        .life-container {
+            width: 80px; /* Más corto */
+            height: 10px; /* Más delgado */
+            background: rgba(255,255,255,0.1);
+            border: 1px solid #00e5ff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .life-bar { height: 100%; background: lime; transition: 0.3s; width: 100%; }
+
         canvas {
             background: #000;
-            border: 3px solid #00e5ff;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
-            width: 100%; /* Se estira al ancho disponible */
+            border: 2px solid #00e5ff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+            width: 100%;
             height: auto;
-            aspect-ratio: 8 / 5; /* Mantiene la proporción de PC siempre */
+            aspect-ratio: 8 / 5;
             touch-action: none;
         }
 
-        /* --- AJUSTES PARA CELULAR VERTICAL --- */
-        @media (max-aspect-ratio: 1/1) {
-            canvas {
-                width: 95vw; /* Casi todo el ancho del celular */
-                border-width: 2px;
-            }
-            .hud {
-                font-size: 0.8rem;
-                gap: 10px;
-                margin-bottom: 5px;
-            }
-            .life-container { width: 100px; height: 15px; }
-            .menu-buttons {
-                width: 95vw; 
-                height: 60vh;
-            }
-            .menu-btn { width: 220px; height: 60px; font-size: 0.9rem; }
+        /* --- RESPONSIVE CELULAR --- */
+        @media (max-aspect-ratio: 1/1) { /* Vertical */
+            canvas { width: 98vw; max-height: 45vh; }
+            .hud { gap: 8px; font-size: 0.75rem; }
         }
 
-        /* HUD y Menús (Tus estilos originales) */
-        .hud{width:100%;max-width:800px;display:flex;justify-content:center;gap:20px;margin-bottom:10px;color:#00e5ff;font-weight:bold}
-        .life-container{width:160px;height:20px;background:#111;border:2px solid #00e5ff;border-radius:20px;overflow:hidden}
-        .life-bar{height:100%;background:lime;transition:.3s;width:100%}
+        @media (min-aspect-ratio: 1/1) and (max-height: 550px) { /* Horizontal Móvil */
+            .game-container { flex-direction: row; gap: 10px; }
+            canvas { height: 80vh; width: auto; }
+            .hud { flex-direction: column; width: auto; gap: 5px; font-size: 0.7rem; }
+            .life-container { width: 60px; }
+        }
 
+        /* Menús */
         .menu, .records-screen, .level-up-screen {position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.9);z-index:100}
-        .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;width:900px;height:500px;background:url("Images/menu.png") no-repeat center;background-size:contain}
-        
+        .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;width:90vw;max-width:600px;height:400px;background:url("Images/menu.png") no-repeat center;background-size:contain}
         .menu-btn, .back-btn, .level-display{
             display:flex;align-items:center;justify-content:center;gap:10px;
-            width:280px;height:80px; border:none;outline:none;background:transparent;position:relative;
-            font-size:1.1rem;font-weight:bold;color:#fff;cursor:pointer;transition:.2s; text-shadow:0 0 6px #000;
+            width:220px;height:65px; border:none;outline:none;background:transparent;position:relative;
+            font-size:1rem;font-weight:bold;color:#fff;cursor:pointer;transition:.2s; text-shadow:0 0 5px #000;
         }
         .menu-btn::before, .back-btn::before, .level-display::before{
             content:"";position:absolute;inset:0;background:url("Images/boton_base.png") no-repeat center;background-size:contain;z-index:-1;
         }
-        .records-content{position:relative;width:540px;height:540px;background:url("Images/records.png") no-repeat center;background-size:contain;display:flex;flex-direction:column;align-items:center;padding-top:110px}
+        .records-content{position:relative;width:90vw;max-width:500px;height:500px;background:url("Images/records.png") no-repeat center;background-size:contain;display:flex;flex-direction:column;align-items:center;padding-top:100px}
     </style>
 </head>
 <body>
 
-<!-- Menús idénticos a tu versión -->
 <div class="menu" id="menu">
     <div class="menu-buttons">
-        <button class="menu-btn" id="playBtn"><img src="Images/iniciar.png" width="28"> <span>INICIAR</span></button>
-        <button class="menu-btn" id="recordsBtn"><img src="Images/copa.png" width="28"> <span>RECORDS</span></button>
+        <button class="menu-btn" id="playBtn"><img src="Images/iniciar.png" width="22"> <span>INICIAR</span></button>
+        <button class="menu-btn" id="recordsBtn"><img src="Images/copa.png" width="22"> <span>RECORDS</span></button>
     </div>
 </div>
 
 <div class="level-up-screen" id="levelUpScreen" style="display:none">
     <button class="level-display" id="levelContinueBtn">
-        <img src="Images/iniciar.png" width="28"> 
-        <span id="levelUpText">NIVEL 1</span>
+        <img src="Images/iniciar.png" width="22"> <span id="levelUpText">NIVEL 1</span>
     </button>
 </div>
 
 <div class="records-screen" id="recordsScreen" style="display:none">
     <div class="records-content">
-        <h2>TOP LOCAL</h2>
-        <ol id="recordsList" style="list-style:none; padding:0;"></ol>
-        <button class="back-btn" id="backBtn" style="margin-top:20px;"><img src="Images/regresar.png" width="20"> <span>REGRESAR</span></button>
+        <h2 style="font-size:1.2rem; margin-bottom:10px;">TOP LOCAL</h2>
+        <ol id="recordsList" style="list-style:none; padding:0; font-size:0.9rem;"></ol>
+        <button class="back-btn" id="backBtn" style="margin-top:15px;"><img src="Images/regresar.png" width="18"> <span>REGRESAR</span></button>
     </div>
 </div>
 
@@ -118,7 +128,7 @@ const $ = e => document.getElementById(e);
 const canvas = $("game"), ctx = canvas.getContext("2d");
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-// Imágenes y Sonidos
+// Assets
 const wallImage = new Image(); wallImage.src = "Images/pared.png";
 const level3Image = new Image(); level3Image.src = "Images/ladrillo.png";
 const asteroidImage = new Image(); asteroidImage.src = "Images/asteroide.png";
@@ -142,12 +152,11 @@ let balls = [], bricks = [], powerups = [], fireEffects = [], hitEffects = [];
 let shakeTime = 0, shakeIntensity = 0;
 
 const colors = ["#ffbf00", "#00e5ff", "#ff3b3b", "#8a2be2", "#00ff99", "#ff66cc"];
-const GOLDEN_GLOW = "#FFD700";
 
 const paddle = { 
-    base: isMobile ? 160 : 120, 
-    width: isMobile ? 160 : 120, 
-    height: 15, x: 340, y: 460, speed: 8, color: "#00e5ff" 
+    base: isMobile ? 150 : 120, 
+    width: isMobile ? 150 : 120, 
+    height: 15, x: 340, y: 460, speed: 9, color: "#00e5ff" 
 };
 
 const config = { rows: 3, cols: 10, w: 70, h: 25, p: 10, top: 50, left: 25 };
@@ -162,9 +171,9 @@ function updateHUD() {
 const resetBall = () => ({
     x: Math.random() * (canvas.width - 100) + 50,
     y: config.top + (config.rows * (config.h + config.p)) + 50,
-    r: 14,
-    sx: (isMobile ? 2.3 : 3.2) * (1 + (level - 1) * 0.05),
-    sy: (isMobile ? 2.3 : 3.2) * (1 + (level - 1) * 0.05)
+    r: 13,
+    sx: (isMobile ? 2.5 : 3.5) * (1 + (level - 1) * 0.08),
+    sy: (isMobile ? 2.5 : 3.5) * (1 + (level - 1) * 0.08)
 });
 
 function createBricks() {
@@ -190,15 +199,15 @@ function createBricks() {
 
 function nextLevel() {
     if (changingLevel) return;
-    const noBricks = bricks.flat().every(b => !b.status);
-    if (!noBricks && score < nextLevelScore) return;
-    changingLevel = true;
-    level++;
-    nextLevelScore += 15;
-    lives = Math.min(lives + 1, maxLives);
-    updateHUD();
-    ui.levelUpText.innerText = "NIVEL " + level;
-    ui.levelUpScreen.style.display = "flex";
+    if (bricks.flat().every(b => !b.status) || score >= nextLevelScore) {
+        changingLevel = true;
+        level++;
+        nextLevelScore += 15;
+        lives = Math.min(lives + 1, maxLives);
+        updateHUD();
+        ui.levelUpText.innerText = "NIVEL " + level;
+        ui.levelUpScreen.style.display = "flex";
+    }
 }
 
 ui.levelContinueBtn.onclick = () => {
@@ -207,7 +216,7 @@ ui.levelContinueBtn.onclick = () => {
     createBricks();
     balls = [resetBall()];
     changingLevel = false;
-    coin.play().catch(() => {});
+    coin.play().catch(()=>{});
 };
 
 function update() {
@@ -230,16 +239,12 @@ function update() {
 
         if (b.sy > 0 && b.y + b.r >= paddle.y && b.y - b.r <= paddle.y + paddle.height &&
             b.x > paddle.x && b.x < paddle.x + paddle.width) {
-            
             b.y = paddle.y - b.r;
             b.sy = -Math.abs(b.sy);
             score++; updateHUD();
-            pop.currentTime = 0; pop.play().catch(() => {});
+            pop.currentTime = 0; pop.play().catch(()=>{});
             
-            // Lógica original de Powerups por puntaje
-            if (score > 0 && score % 10 === 0) powerups.push({ x: Math.random() * (canvas.width - 50) + 25, y: -50, type: "extraLife" });
-            if (score % 20 === 0) balls.push({ ...resetBall(), x: b.x, y: b.y, sx: -b.sx });
-            
+            if (score % 10 === 0) powerups.push({ x: Math.random() * 700 + 50, y: -50, type: "extraLife" });
             nextLevel();
         }
 
@@ -259,38 +264,29 @@ function update() {
         }
 
         if (b.y - b.r > canvas.height) {
-            shakeTime = 12; shakeIntensity = 10;
+            shakeTime = 10; shakeIntensity = 8;
             fireEffects.push({ x: b.x - 40, y: paddle.y - 40, frame: 0, timer: 0 });
             balls.splice(i, 1);
             lives--; updateHUD();
             if (lives <= 0) {
-                let n = prompt("FIN DEL JUEGO\nTu nombre:") || "Piloto";
+                let n = prompt("FIN DEL JUEGO\nNombre:") || "Piloto";
                 saveRecord(n, score);
                 location.reload();
-            } else if (balls.length === 0) {
-                balls.push(resetBall());
-            }
+            } else if (balls.length === 0) balls.push(resetBall());
         }
     }
 
-    // --- GROW REPARADO Y CON LÍMITE ---
     for (let i = powerups.length - 1; i >= 0; i--) {
-        let p = powerups[i]; p.y += 2;
-        if (p.y + 40 >= paddle.y && p.y <= paddle.y + paddle.height && p.x + 40 > paddle.x && p.x < paddle.x + paddle.width) {
-            if (p.type === "extraLife") { 
-                lives = Math.min(lives + 1, maxLives); 
-                updateHUD(); 
-            } else { 
-                // Crecimiento del 15% con tope de 380px para no ocupar toda la pantalla
-                paddle.width = Math.min(paddle.width * 1.15, 380);
-                paddle.color = colors[Math.floor(Math.random() * colors.length)];
-                
-                // Efecto de flash blanco
-                let lastColor = paddle.color;
+        let p = powerups[i]; p.y += 2.5;
+        if (p.y + 35 >= paddle.y && p.y <= paddle.y + paddle.height && p.x + 35 > paddle.x && p.x < paddle.x + paddle.width) {
+            if (p.type === "extraLife") { lives = Math.min(lives + 1, maxLives); updateHUD(); }
+            else { 
+                // CRECIMIENTO AL 0.5%
+                paddle.width = Math.min(paddle.width * 1.005, 380); 
                 paddle.color = "#FFFFFF";
-                setTimeout(() => { paddle.color = lastColor; }, 150);
+                setTimeout(() => { paddle.color = colors[Math.floor(Math.random() * colors.length)]; }, 100);
             }
-            coin.currentTime = 0; coin.play().catch(() => {});
+            coin.currentTime = 0; coin.play().catch(()=>{});
             powerups.splice(i, 1);
         } else if (p.y >= canvas.height) powerups.splice(i, 1);
     }
@@ -302,10 +298,12 @@ function draw() {
         ctx.translate((Math.random() - 0.5) * shakeIntensity, (Math.random() - 0.5) * shakeIntensity);
         shakeTime--;
     }
-    ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
+    ctx.clearRect(-20, -20, canvas.width + 40, canvas.height + 40);
     
     ctx.fillStyle = paddle.color;
+    ctx.shadowBlur = 10; ctx.shadowColor = paddle.color;
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
+    ctx.shadowBlur = 0;
 
     balls.forEach(b => ctx.drawImage(asteroidImage, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2));
     for (let c = 0; c < config.cols; c++) {
@@ -314,12 +312,7 @@ function draw() {
             if (b.status) ctx.drawImage(level >= 3 ? level3Image : wallImage, b.x, b.y, config.w, config.h);
         }
     }
-    powerups.forEach(p => {
-        if (p.type === "extraLife") {
-            ctx.save(); ctx.shadowBlur = 30; ctx.shadowColor = GOLDEN_GLOW;
-            ctx.drawImage(cometSprite, p.x, p.y, 48, 48); ctx.restore();
-        } else { ctx.drawImage(cometSprite, p.x, p.y, 42, 42); }
-    });
+    powerups.forEach(p => ctx.drawImage(cometSprite, p.x, p.y, 40, 40));
     fireEffects.forEach((f, i) => {
         const fw = fireSprite.width / 6;
         ctx.drawImage(fireSprite, Math.floor(f.frame) * fw, 0, fw, fireSprite.height, f.x, f.y, 80, 80);
@@ -341,7 +334,7 @@ createBricks();
 balls = [resetBall()];
 updateHUD();
 
-ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coin.play().catch(() => {}); };
+ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coin.play().catch(()=>{}); };
 addEventListener("keydown", e => { if (e.key === "ArrowRight") right = true; if (e.key === "ArrowLeft") left = true; });
 addEventListener("keyup", e => { if (e.key === "ArrowRight") right = false; if (e.key === "ArrowLeft") left = false; });
 
@@ -364,8 +357,8 @@ ui.records.onclick = () => {
     ui.list.innerHTML = "";
     (JSON.parse(localStorage.getItem("records")) || []).forEach((r, i) => {
         let li = document.createElement("li");
-        li.style.marginBottom = "8px";
-        li.innerText = `${["🥇", "🥈", "🥉"][i] || ""} ${r.name} - ${r.score}`;
+        li.style.marginBottom = "5px";
+        li.innerText = `${["🥇", "🥈", "🥉"][i] || ""} ${r.name}: ${r.score}`;
         ui.list.appendChild(li);
     });
 };
