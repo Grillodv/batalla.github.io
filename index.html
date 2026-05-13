@@ -18,7 +18,21 @@
             align-items:center;
             padding-top: 20px; 
         }
+
+        .records-title {
+            font-size: 1.2rem;
+            color: #ff3b3b;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(87, 0, 250, 0.418);
+            animation: parpadeo 1.5s infinite;
+        }
         
+        @keyframes parpadeo {
+            0%, 100% { opacity: 1; text-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+            50% { opacity: 0.3; text-shadow: 0 0 5px rgba(255, 215, 0, 0.2); }
+        }
+
         .game-container {
             width: 100%;
             max-width: 900px;
@@ -28,7 +42,6 @@
             padding: 5px;
         }
 
-        /* --- HUD BASE (Móvil) --- */
         .hud {
             width: 100%;
             max-width: 800px;
@@ -53,18 +66,9 @@
         }
         .life-bar { height: 100%; background: lime; width: 100%; transition: width 0.3s; }
 
-        /* --- HUD PARA PC --- */
         @media (min-width: 768px) {
-            .hud {
-                font-size: 1.2rem;
-                gap: 30px;
-                margin-bottom: 15px;
-            }
-            .life-container {
-                width: 150px;
-                height: 18px;
-                border: 2px solid #00e5ff;
-            }
+            .hud { font-size: 1.2rem; gap: 30px; margin-bottom: 15px; }
+            .life-container { width: 150px; height: 18px; border: 2px solid #00e5ff; }
         }
 
         canvas {
@@ -78,15 +82,9 @@
             touch-action: none;
         }
 
-        /* --- AJUSTE POSICIÓN MÓVIL --- */
         @media (max-aspect-ratio: 1/1) { 
-            body { 
-                padding-top: 40px; /* Despegado un poco de la parte superior */
-            } 
-            canvas { 
-                width: 98vw; 
-                max-height: 45vh; 
-            }
+            body { padding-top: 40px; } 
+            canvas { width: 98vw; max-height: 45vh; }
         }
 
         @media (min-aspect-ratio: 1/1) and (max-height: 550px) {
@@ -96,9 +94,11 @@
             .life-container { width: 60px; height: 6px; }
         }
 
-        /* Menús */
         .menu, .records-screen, .level-up-screen {position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.9);z-index:100}
-        .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;width:90vw;max-width:600px;height:400px;background:url("Images/menu.png") no-repeat center;background-size:contain}
+        .menu-buttons, .records-content {display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;width:90vw;max-width:600px;height:400px;background:url("Images/menu.png") no-repeat center;background-size:contain}
+        
+        .records-content { background-image: url("Images/records.png"); }
+
         .menu-btn, .back-btn, .level-display{
             display:flex;align-items:center;justify-content:center;gap:8px;
             width:200px;height:60px; border:none;background:transparent;position:relative;
@@ -126,8 +126,8 @@
 
 <div class="records-screen" id="recordsScreen" style="display:none">
     <div class="records-content">
-        <h2 style="font-size:1rem; color:#00e5ff;">TOP LOCAL</h2>
-        <ol id="recordsList" style="list-style:none; padding:0; font-size:0.8rem; margin: 15px 0;"></ol>
+        <h2 class="records-title">JUGADORES</h2>
+        <ol id="recordsList" style="list-style:none; padding:0; font-size:0.8rem; margin: 15px 0; text-align: center;"></ol>
         <button class="back-btn" id="backBtn"><img src="Images/regresar.png" width="18"> <span>REGRESAR</span></button>
     </div>
 </div>
@@ -169,13 +169,17 @@ let started = false, changingLevel = false, targetX = 340;
 let right = false, left = false;
 let balls = [], bricks = [], powerups = [], fireFX = [], hitFX = [];
 let shakeT = 0, shakeI = 0;
+let speedMultiplier = 1;
 
 const colors = ["#ffbf00", "#00e5ff", "#ff3b3b", "#8a2be2", "#00ff99", "#ff66cc"];
 
+// Ajustamos la raqueta para que tenga una base sólida
 const paddle = { 
     base: isMobile ? 150 : 120, 
     width: isMobile ? 150 : 120, 
-    height: 15, x: 340, y: 460, speed: 9, color: "#00e5ff" 
+    height: 15, x: 340, y: 460, 
+    baseSpeed: 10, // Velocidad base normal
+    color: "#00e5ff" 
 };
 
 const config = { rows: 3, cols: 10, w: 70, h: 25, p: 10, top: 50, left: 25 };
@@ -188,11 +192,12 @@ function updateHUD() {
 }
 
 const resetBall = () => ({
-    x: Math.random() * 700 + 50,
-    y: 300,
+    x: paddle.x + paddle.width / 2,
+    y: paddle.y - 15,
     r: 15, 
-    sx: (isMobile ? 2.6 : 3.6) * (1 + (level - 1) * 0.08),
-    sy: (isMobile ? 2.6 : 3.6) * (1 + (level - 1) * 0.08)
+    sx: 0, 
+    sy: 0,
+    stuck: true
 });
 
 function createBricks() {
@@ -200,15 +205,23 @@ function createBricks() {
     let specials = new Set();
     while(specials.size < 11) specials.add(Math.floor(Math.random() * 30));
     const specArr = Array.from(specials);
+    const isHardLevel = [4, 6, 8, 10].includes(level);
 
     for (let c = 0; c < config.cols; c++) {
         bricks[c] = [];
         for (let r = 0; r < config.rows; r++) {
             let i = c * config.rows + r;
+            let blockHits = 1;
+            if (isHardLevel) {
+                blockHits = Math.random() > 0.5 ? 2 : 1;
+            }
+
             bricks[c][r] = {
                 x: c * (config.w + config.p) + config.left,
                 y: r * (config.h + config.p) + config.top,
                 status: 1,
+                hits: blockHits,
+                initialHits: blockHits,
                 type: specArr.indexOf(i) < 7 && specArr.indexOf(i) !== -1 ? "comet" : 
                       specArr.indexOf(i) >= 7 ? "double" : "normal"
             };
@@ -222,6 +235,7 @@ function nextLevel() {
         changingLevel = true;
         level++;
         nextScore += 15;
+        speedMultiplier = 1;
         lives = Math.min(lives + 1, maxLives);
         updateHUD();
         ui.lvlUpTxt.innerText = "NIVEL " + level;
@@ -241,17 +255,45 @@ ui.lvlContBtn.onclick = () => {
 function update() {
     if (!started || changingLevel) return;
 
+    const isHardLevel = [4, 6, 8, 10].includes(level);
+
+    // LÓGICA DE VELOCIDAD DE LA BARRA LIGADA A LA PELOTA
+    // Calculamos la velocidad de la barra: base + bono por nivel + multiplicador dinámico
+    let currentPaddleSpeed = (paddle.baseSpeed + (level * 0.5)) * speedMultiplier;
+    if (isHardLevel) currentPaddleSpeed *= 1.3; // 30% extra de velocidad en niveles hard
+
+    balls.forEach(b => {
+        if (b.stuck) {
+            b.x = paddle.x + paddle.width / 2;
+            b.y = paddle.y - b.r;
+            if (right || left || (isMobile && Math.abs(targetX - paddle.x) > 2)) {
+                b.stuck = false;
+                const baseSpeed = isHardLevel ? (isMobile ? 4.2 : 5.8) : (isMobile ? 2.8 : 3.8);
+                const levelBonus = (1 + (level - 1) * 0.08); 
+                
+                const speed = baseSpeed * levelBonus;
+                b.sx = speed * (Math.random() > 0.5 ? 1 : -1);
+                b.sy = -speed;
+            }
+        }
+    });
+
     if (isMobile) {
-        paddle.x += (targetX - paddle.x) * 0.25;
+        // En móvil, la respuesta es proporcional a la velocidad calculada
+        let followSharpness = isHardLevel ? 0.35 : 0.25;
+        paddle.x += (targetX - paddle.x) * followSharpness;
     } else {
-        if (right && paddle.x + paddle.width < canvas.width) paddle.x += paddle.speed;
-        if (left && paddle.x > 0) paddle.x -= paddle.speed;
+        if (right && paddle.x + paddle.width < canvas.width) paddle.x += currentPaddleSpeed;
+        if (left && paddle.x > 0) paddle.x -= currentPaddleSpeed;
     }
     paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, paddle.x));
 
     for (let i = balls.length - 1; i >= 0; i--) {
         let b = balls[i];
-        b.x += b.sx; b.y += b.sy;
+        if (b.stuck) continue;
+
+        b.x += b.sx * speedMultiplier; 
+        b.y += b.sy * speedMultiplier;
 
         if (b.x + b.r > canvas.width || b.x - b.r < 0) b.sx *= -1;
         if (b.y - b.r < 0) b.sy *= -1;
@@ -260,7 +302,12 @@ function update() {
             b.x > paddle.x && b.x < paddle.x + paddle.width) {
             b.y = paddle.y - b.r;
             b.sy = -Math.abs(b.sy);
-            score++; updateHUD();
+            
+            score++; 
+            // Aceleración dinámica
+            speedMultiplier += isHardLevel ? 0.025 : 0.015; 
+            updateHUD();
+            
             popSnd.currentTime = 0; popSnd.play().catch(()=>{});
             if (score % 10 === 0) powerups.push({ x: Math.random() * 700 + 50, y: -50, type: "extraLife" });
             nextLevel();
@@ -271,11 +318,19 @@ function update() {
                 let bk = bricks[c][r];
                 if (bk.status && b.x + b.r > bk.x && b.x - b.r < bk.x + config.w &&
                     b.y + b.r > bk.y && b.y - b.r < bk.y + config.h) {
-                    bk.status = 0; b.sy *= -1;
-                    hitFX.push({ x: bk.x + 5, y: bk.y - 10, frame: 0, timer: 0 });
-                    if (bk.type === "comet") powerups.push({ x: bk.x + 15, y: bk.y, type: "grow" });
-                    if (bk.type === "double") balls.push({ ...resetBall(), x: b.x, y: b.y, sx: -b.sx });
-                    nextLevel();
+                    
+                    b.sy *= -1;
+                    bk.hits--;
+
+                    if (bk.hits <= 0) {
+                        bk.status = 0;
+                        hitFX.push({ x: bk.x + 5, y: bk.y - 10, frame: 0, timer: 0 });
+                        if (bk.type === "comet") powerups.push({ x: bk.x + 15, y: bk.y, type: "grow" });
+                        if (bk.type === "double") balls.push({ ...resetBall(), stuck: false, x: b.x, y: b.y, sx: -b.sx, sy: b.sy });
+                        nextLevel();
+                    } else {
+                        popSnd.currentTime = 0; popSnd.play().catch(()=>{});
+                    }
                     break brickSearch;
                 }
             }
@@ -285,7 +340,9 @@ function update() {
             shakeT = 10; shakeI = 8;
             fireFX.push({ x: b.x - 40, y: paddle.y - 40, frame: 0, timer: 0 });
             balls.splice(i, 1);
-            lives--; updateHUD();
+            lives--; 
+            speedMultiplier = 1; 
+            updateHUD();
             if (lives <= 0) {
                 let n = prompt("FIN DEL JUEGO\nNombre:") || "Piloto";
                 saveRecord(n, score);
@@ -299,7 +356,7 @@ function update() {
         if (p.y + 35 >= paddle.y && p.y <= paddle.y + paddle.height && p.x + 35 > paddle.x && p.x < paddle.x + paddle.width) {
             if (p.type === "extraLife") { lives = Math.min(lives + 1, maxLives); updateHUD(); }
             else { 
-                paddle.width = Math.min(paddle.width * 1.005, 380); 
+                paddle.width = Math.min(paddle.width * 1.05, 380); 
                 paddle.color = "#FFFFFF";
                 setTimeout(() => { paddle.color = colors[Math.floor(Math.random() * colors.length)]; }, 100);
             }
@@ -323,13 +380,36 @@ function draw() {
     ctx.shadowBlur = 0;
 
     balls.forEach(b => ctx.drawImage(astImg, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2));
+    
     for (let c = 0; c < config.cols; c++) {
         for (let r = 0; r < config.rows; r++) {
             let b = bricks[c][r];
-            if (b.status) ctx.drawImage(level >= 3 ? lvl3Img : wallImg, b.x, b.y, config.w, config.h);
+            if (b.status) {
+                ctx.save();
+                if (b.hits === 2) {
+                    ctx.filter = "contrast(1.5) brightness(1.2)";
+                    ctx.shadowBlur = 5;
+                    ctx.shadowColor = "#fff";
+                } else if (b.initialHits === 2 && b.hits === 1) {
+                    ctx.globalAlpha = 0.4;
+                }
+                ctx.drawImage(level >= 3 ? lvl3Img : wallImg, b.x, b.y, config.w, config.h);
+                ctx.restore();
+            }
         }
     }
-    powerups.forEach(p => ctx.drawImage(cometImg, p.x, p.y, 40, 40));
+
+    powerups.forEach(p => {
+        ctx.save();
+        if (p.type === "extraLife") {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = "#FFD700";
+            ctx.filter = "brightness(1.2) saturate(1.5)";
+        }
+        ctx.drawImage(cometImg, p.x, p.y, 40, 40);
+        ctx.restore();
+    });
+
     fireFX.forEach((f, i) => {
         const fw = fireImg.width / 6;
         ctx.drawImage(fireImg, Math.floor(f.frame) * fw, 0, fw, fireImg.height, f.x, f.y, 80, 80);
@@ -366,16 +446,17 @@ function saveRecord(n, s) {
     let r = JSON.parse(localStorage.getItem("records")) || [];
     r.push({ name: n, score: s });
     r.sort((a, b) => b.score - a.score);
-    localStorage.setItem("records", JSON.stringify(r.slice(0, 10)));
+    localStorage.setItem("records", JSON.stringify(r.slice(0, 5)));
 }
 
 ui.records.onclick = () => {
     ui.menu.style.display = "none"; $("recordsScreen").style.display = "flex";
     ui.list.innerHTML = "";
     (JSON.parse(localStorage.getItem("records")) || []).forEach((r, i) => {
+        const medals = ["🥇", "🥈", "🥉", "🏅", "🎖️"];
         let li = document.createElement("li");
         li.style.marginBottom = "5px";
-        li.innerText = `${["🥇", "🥈", "🥉"][i] || ""} ${r.name}: ${r.score}`;
+        li.innerText = `${medals[i] || ""} ${r.name}: ${r.score}`;
         ui.list.appendChild(li);
     });
 };
