@@ -3,19 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>Arcade Space Pro</title>
+    <title>Arcade Space Pro - PC & Mobile HUD</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{
             background:radial-gradient(circle,#111827,#050816);
             overflow:hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             color:#fff;
             min-height:100vh;
             display:flex;
             flex-direction: column;
-            justify-content:center;
-            align-items:center
+            justify-content: flex-start; 
+            align-items:center;
+            padding-top: 20px; 
         }
         
         .game-container {
@@ -27,30 +28,44 @@
             padding: 5px;
         }
 
-        /* HUD Minimalista */
+        /* --- HUD BASE (Móvil por defecto) --- */
         .hud {
             width: 100%;
             max-width: 800px;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 6px;
+            gap: 10px;
+            margin-bottom: 5px;
             color: #00e5ff;
             font-weight: bold;
-            font-size: 0.8rem; /* Texto más pequeño */
+            font-size: 0.7rem; 
             text-shadow: 0 0 5px rgba(0,229,255,0.5);
         }
 
         .life-container {
-            width: 80px; /* Más corto */
-            height: 10px; /* Más delgado */
+            width: 70px; 
+            height: 8px; 
             background: rgba(255,255,255,0.1);
             border: 1px solid #00e5ff;
             border-radius: 10px;
             overflow: hidden;
         }
-        .life-bar { height: 100%; background: lime; transition: 0.3s; width: 100%; }
+        .life-bar { height: 100%; background: lime; width: 100%; transition: width 0.3s; }
+
+        /* --- HUD PARA PC (Más grande) --- */
+        @media (min-width: 768px) {
+            .hud {
+                font-size: 1.2rem; /* Texto más grande en PC */
+                gap: 30px;
+                margin-bottom: 15px;
+            }
+            .life-container {
+                width: 150px; /* Barra más larga */
+                height: 18px; /* Barra más gruesa */
+                border: 2px solid #00e5ff;
+            }
+        }
 
         canvas {
             background: #000;
@@ -63,53 +78,51 @@
             touch-action: none;
         }
 
-        /* --- RESPONSIVE CELULAR --- */
-        @media (max-aspect-ratio: 1/1) { /* Vertical */
+        /* --- RESPONSIVE ADAPTATIONS --- */
+        @media (max-aspect-ratio: 1/1) { 
+            body { padding-top: 10px; } 
             canvas { width: 98vw; max-height: 45vh; }
-            .hud { gap: 8px; font-size: 0.75rem; }
         }
 
-        @media (min-aspect-ratio: 1/1) and (max-height: 550px) { /* Horizontal Móvil */
-            .game-container { flex-direction: row; gap: 10px; }
-            canvas { height: 80vh; width: auto; }
-            .hud { flex-direction: column; width: auto; gap: 5px; font-size: 0.7rem; }
-            .life-container { width: 60px; }
+        @media (min-aspect-ratio: 1/1) and (max-height: 550px) {
+            .game-container { flex-direction: row; gap: 10px; padding-top: 0; }
+            canvas { height: 85vh; width: auto; }
+            .hud { flex-direction: column; width: auto; gap: 4px; font-size: 0.65rem; }
+            .life-container { width: 60px; height: 6px; }
         }
 
-        /* Menús */
         .menu, .records-screen, .level-up-screen {position:fixed;inset:0;display:flex;justify-content:center;align-items:center;background:rgba(0,0,0,0.9);z-index:100}
         .menu-buttons{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;width:90vw;max-width:600px;height:400px;background:url("Images/menu.png") no-repeat center;background-size:contain}
         .menu-btn, .back-btn, .level-display{
-            display:flex;align-items:center;justify-content:center;gap:10px;
-            width:220px;height:65px; border:none;outline:none;background:transparent;position:relative;
-            font-size:1rem;font-weight:bold;color:#fff;cursor:pointer;transition:.2s; text-shadow:0 0 5px #000;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            width:200px;height:60px; border:none;background:transparent;position:relative;
+            font-size:0.9rem;font-weight:bold;color:#fff;cursor:pointer;
         }
         .menu-btn::before, .back-btn::before, .level-display::before{
             content:"";position:absolute;inset:0;background:url("Images/boton_base.png") no-repeat center;background-size:contain;z-index:-1;
         }
-        .records-content{position:relative;width:90vw;max-width:500px;height:500px;background:url("Images/records.png") no-repeat center;background-size:contain;display:flex;flex-direction:column;align-items:center;padding-top:100px}
     </style>
 </head>
 <body>
 
 <div class="menu" id="menu">
     <div class="menu-buttons">
-        <button class="menu-btn" id="playBtn"><img src="Images/iniciar.png" width="22"> <span>INICIAR</span></button>
-        <button class="menu-btn" id="recordsBtn"><img src="Images/copa.png" width="22"> <span>RECORDS</span></button>
+        <button class="menu-btn" id="playBtn"><img src="Images/iniciar.png" width="20"> <span>INICIAR</span></button>
+        <button class="menu-btn" id="recordsBtn"><img src="Images/copa.png" width="20"> <span>RECORDS</span></button>
     </div>
 </div>
 
 <div class="level-up-screen" id="levelUpScreen" style="display:none">
     <button class="level-display" id="levelContinueBtn">
-        <img src="Images/iniciar.png" width="22"> <span id="levelUpText">NIVEL 1</span>
+        <img src="Images/iniciar.png" width="20"> <span id="levelUpText">NIVEL 1</span>
     </button>
 </div>
 
 <div class="records-screen" id="recordsScreen" style="display:none">
     <div class="records-content">
-        <h2 style="font-size:1.2rem; margin-bottom:10px;">TOP LOCAL</h2>
-        <ol id="recordsList" style="list-style:none; padding:0; font-size:0.9rem;"></ol>
-        <button class="back-btn" id="backBtn" style="margin-top:15px;"><img src="Images/regresar.png" width="18"> <span>REGRESAR</span></button>
+        <h2 style="font-size:1rem; color:#00e5ff;">TOP LOCAL</h2>
+        <ol id="recordsList" style="list-style:none; padding:0; font-size:0.8rem; margin: 15px 0;"></ol>
+        <button class="back-btn" id="backBtn"><img src="Images/regresar.png" width="18"> <span>REGRESAR</span></button>
     </div>
 </div>
 
@@ -128,28 +141,27 @@ const $ = e => document.getElementById(e);
 const canvas = $("game"), ctx = canvas.getContext("2d");
 const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-// Assets
-const wallImage = new Image(); wallImage.src = "Images/pared.png";
-const level3Image = new Image(); level3Image.src = "Images/ladrillo.png";
-const asteroidImage = new Image(); asteroidImage.src = "Images/asteroide.png";
-const cometSprite = new Image(); cometSprite.src = "Images/cometa.png";
-const fireSprite = new Image(); fireSprite.src = "Images/fuego.png";
-const hitSprite = new Image(); hitSprite.src = "Images/explosion.png";
-const coin = new Audio("Sounds/coin.mp3"), pop = new Audio("Sounds/burbuja.mp3");
+const wallImg = new Image(); wallImg.src = "Images/pared.png";
+const lvl3Img = new Image(); lvl3Img.src = "Images/ladrillo.png";
+const astImg = new Image(); astImg.src = "Images/asteroide.png";
+const cometImg = new Image(); cometImg.src = "Images/cometa.png";
+const fireImg = new Image(); fireImg.src = "Images/fuego.png";
+const hitImg = new Image(); hitImg.src = "Images/explosion.png";
+const coinSnd = new Audio("Sounds/coin.mp3"), popSnd = new Audio("Sounds/burbuja.mp3");
 
 const ui = {
     menu: $("menu"), play: $("playBtn"), records: $("recordsBtn"),
     list: $("recordsList"), score: $("score"), lives: $("lives"),
     life: $("lifeBar"), level: $("levelText"),
-    levelUpScreen: $("levelUpScreen"), levelUpText: $("levelUpText"),
-    levelContinueBtn: $("levelContinueBtn")
+    lvlUpScn: $("levelUpScreen"), lvlUpTxt: $("levelUpText"),
+    lvlContBtn: $("levelContinueBtn")
 };
 
-let score = 0, lives = 5, maxLives = 5, level = 1, nextLevelScore = 15;
+let score = 0, lives = 5, maxLives = 5, level = 1, nextScore = 15;
 let started = false, changingLevel = false, targetX = 340;
 let right = false, left = false;
-let balls = [], bricks = [], powerups = [], fireEffects = [], hitEffects = [];
-let shakeTime = 0, shakeIntensity = 0;
+let balls = [], bricks = [], powerups = [], fireFX = [], hitFX = [];
+let shakeT = 0, shakeI = 0;
 
 const colors = ["#ffbf00", "#00e5ff", "#ff3b3b", "#8a2be2", "#00ff99", "#ff66cc"];
 
@@ -169,18 +181,18 @@ function updateHUD() {
 }
 
 const resetBall = () => ({
-    x: Math.random() * (canvas.width - 100) + 50,
-    y: config.top + (config.rows * (config.h + config.p)) + 50,
-    r: 13,
-    sx: (isMobile ? 2.5 : 3.5) * (1 + (level - 1) * 0.08),
-    sy: (isMobile ? 2.5 : 3.5) * (1 + (level - 1) * 0.08)
+    x: Math.random() * 700 + 50,
+    y: 300,
+    r: 15,
+    sx: (isMobile ? 2.6 : 3.6) * (1 + (level - 1) * 0.08),
+    sy: (isMobile ? 2.6 : 3.6) * (1 + (level - 1) * 0.08)
 });
 
 function createBricks() {
     bricks = [];
-    let specialIds = new Set();
-    while(specialIds.size < 11) specialIds.add(Math.floor(Math.random() * 30));
-    const specialArr = Array.from(specialIds);
+    let specials = new Set();
+    while(specials.size < 11) specials.add(Math.floor(Math.random() * 30));
+    const specArr = Array.from(specials);
 
     for (let c = 0; c < config.cols; c++) {
         bricks[c] = [];
@@ -190,8 +202,8 @@ function createBricks() {
                 x: c * (config.w + config.p) + config.left,
                 y: r * (config.h + config.p) + config.top,
                 status: 1,
-                type: specialArr.indexOf(i) < 7 && specialArr.indexOf(i) !== -1 ? "comet" : 
-                      specialArr.indexOf(i) >= 7 ? "double" : "normal"
+                type: specArr.indexOf(i) < 7 && specArr.indexOf(i) !== -1 ? "comet" : 
+                      specArr.indexOf(i) >= 7 ? "double" : "normal"
             };
         }
     }
@@ -199,24 +211,24 @@ function createBricks() {
 
 function nextLevel() {
     if (changingLevel) return;
-    if (bricks.flat().every(b => !b.status) || score >= nextLevelScore) {
+    if (bricks.flat().every(b => !b.status) || score >= nextScore) {
         changingLevel = true;
         level++;
-        nextLevelScore += 15;
+        nextScore += 15;
         lives = Math.min(lives + 1, maxLives);
         updateHUD();
-        ui.levelUpText.innerText = "NIVEL " + level;
-        ui.levelUpScreen.style.display = "flex";
+        ui.lvlUpTxt.innerText = "NIVEL " + level;
+        ui.lvlUpScn.style.display = "flex";
     }
 }
 
-ui.levelContinueBtn.onclick = () => {
-    ui.levelUpScreen.style.display = "none";
+ui.lvlContBtn.onclick = () => {
+    ui.lvlUpScn.style.display = "none";
     paddle.width = paddle.base;
     createBricks();
     balls = [resetBall()];
     changingLevel = false;
-    coin.play().catch(()=>{});
+    coinSnd.play().catch(()=>{});
 };
 
 function update() {
@@ -242,8 +254,7 @@ function update() {
             b.y = paddle.y - b.r;
             b.sy = -Math.abs(b.sy);
             score++; updateHUD();
-            pop.currentTime = 0; pop.play().catch(()=>{});
-            
+            popSnd.currentTime = 0; popSnd.play().catch(()=>{});
             if (score % 10 === 0) powerups.push({ x: Math.random() * 700 + 50, y: -50, type: "extraLife" });
             nextLevel();
         }
@@ -254,7 +265,7 @@ function update() {
                 if (bk.status && b.x + b.r > bk.x && b.x - b.r < bk.x + config.w &&
                     b.y + b.r > bk.y && b.y - b.r < bk.y + config.h) {
                     bk.status = 0; b.sy *= -1;
-                    hitEffects.push({ x: bk.x + 5, y: bk.y - 10, frame: 0, timer: 0 });
+                    hitFX.push({ x: bk.x + 5, y: bk.y - 10, frame: 0, timer: 0 });
                     if (bk.type === "comet") powerups.push({ x: bk.x + 15, y: bk.y, type: "grow" });
                     if (bk.type === "double") balls.push({ ...resetBall(), x: b.x, y: b.y, sx: -b.sx });
                     nextLevel();
@@ -264,8 +275,8 @@ function update() {
         }
 
         if (b.y - b.r > canvas.height) {
-            shakeTime = 10; shakeIntensity = 8;
-            fireEffects.push({ x: b.x - 40, y: paddle.y - 40, frame: 0, timer: 0 });
+            shakeT = 10; shakeI = 8;
+            fireFX.push({ x: b.x - 40, y: paddle.y - 40, frame: 0, timer: 0 });
             balls.splice(i, 1);
             lives--; updateHUD();
             if (lives <= 0) {
@@ -281,12 +292,11 @@ function update() {
         if (p.y + 35 >= paddle.y && p.y <= paddle.y + paddle.height && p.x + 35 > paddle.x && p.x < paddle.x + paddle.width) {
             if (p.type === "extraLife") { lives = Math.min(lives + 1, maxLives); updateHUD(); }
             else { 
-                // CRECIMIENTO AL 0.5%
                 paddle.width = Math.min(paddle.width * 1.005, 380); 
                 paddle.color = "#FFFFFF";
                 setTimeout(() => { paddle.color = colors[Math.floor(Math.random() * colors.length)]; }, 100);
             }
-            coin.currentTime = 0; coin.play().catch(()=>{});
+            coinSnd.currentTime = 0; coinSnd.play().catch(()=>{});
             powerups.splice(i, 1);
         } else if (p.y >= canvas.height) powerups.splice(i, 1);
     }
@@ -294,9 +304,9 @@ function update() {
 
 function draw() {
     ctx.save();
-    if (shakeTime > 0) {
-        ctx.translate((Math.random() - 0.5) * shakeIntensity, (Math.random() - 0.5) * shakeIntensity);
-        shakeTime--;
+    if (shakeT > 0) {
+        ctx.translate((Math.random() - 0.5) * shakeI, (Math.random() - 0.5) * shakeI);
+        shakeT--;
     }
     ctx.clearRect(-20, -20, canvas.width + 40, canvas.height + 40);
     
@@ -305,25 +315,25 @@ function draw() {
     ctx.fillRect(paddle.x, paddle.y, paddle.width, paddle.height);
     ctx.shadowBlur = 0;
 
-    balls.forEach(b => ctx.drawImage(asteroidImage, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2));
+    balls.forEach(b => ctx.drawImage(astImg, b.x - b.r, b.y - b.r, b.r * 2, b.r * 2));
     for (let c = 0; c < config.cols; c++) {
         for (let r = 0; r < config.rows; r++) {
             let b = bricks[c][r];
-            if (b.status) ctx.drawImage(level >= 3 ? level3Image : wallImage, b.x, b.y, config.w, config.h);
+            if (b.status) ctx.drawImage(level >= 3 ? lvl3Img : wallImg, b.x, b.y, config.w, config.h);
         }
     }
-    powerups.forEach(p => ctx.drawImage(cometSprite, p.x, p.y, 40, 40));
-    fireEffects.forEach((f, i) => {
-        const fw = fireSprite.width / 6;
-        ctx.drawImage(fireSprite, Math.floor(f.frame) * fw, 0, fw, fireSprite.height, f.x, f.y, 80, 80);
+    powerups.forEach(p => ctx.drawImage(cometImg, p.x, p.y, 40, 40));
+    fireFX.forEach((f, i) => {
+        const fw = fireImg.width / 6;
+        ctx.drawImage(fireImg, Math.floor(f.frame) * fw, 0, fw, fireImg.height, f.x, f.y, 80, 80);
         f.timer++; if (f.timer % 5 === 0) f.frame++;
-        if (f.frame >= 6) fireEffects.splice(i, 1);
+        if (f.frame >= 6) fireFX.splice(i, 1);
     });
-    hitEffects.forEach((h, i) => {
-        const fw = hitSprite.width / 6;
-        ctx.drawImage(hitSprite, Math.floor(h.frame) * fw, 0, fw, hitSprite.height, h.x, h.y, 60, 60);
+    hitFX.forEach((h, i) => {
+        const fw = hitImg.width / 6;
+        ctx.drawImage(hitImg, Math.floor(h.frame) * fw, 0, fw, hitImg.height, h.x, h.y, 60, 60);
         h.timer++; if (h.timer % 3 === 0) h.frame++;
-        if (h.frame >= 6) hitEffects.splice(i, 1);
+        if (h.frame >= 6) hitFX.splice(i, 1);
     });
     ctx.restore();
 }
@@ -334,20 +344,20 @@ createBricks();
 balls = [resetBall()];
 updateHUD();
 
-ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coin.play().catch(()=>{}); };
+ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coinSnd.play().catch(()=>{}); };
 addEventListener("keydown", e => { if (e.key === "ArrowRight") right = true; if (e.key === "ArrowLeft") left = true; });
 addEventListener("keyup", e => { if (e.key === "ArrowRight") right = false; if (e.key === "ArrowLeft") left = false; });
 
 canvas.addEventListener("touchmove", e => {
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    targetX = (e.touches[0].clientX - rect.left) * scaleX - paddle.width / 2;
+    const scX = canvas.width / rect.width;
+    targetX = (e.touches[0].clientX - rect.left) * scX - paddle.width / 2;
     e.preventDefault();
 }, { passive: false });
 
-function saveRecord(name, score) {
+function saveRecord(n, s) {
     let r = JSON.parse(localStorage.getItem("records")) || [];
-    r.push({ name, score });
+    r.push({ name: n, score: s });
     r.sort((a, b) => b.score - a.score);
     localStorage.setItem("records", JSON.stringify(r.slice(0, 10)));
 }
