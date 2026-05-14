@@ -173,12 +173,12 @@ let speedMultiplier = 1;
 
 const colors = ["#ffbf00", "#00e5ff", "#ff3b3b", "#8a2be2", "#00ff99", "#ff66cc"];
 
-// Ajustamos la raqueta para que tenga una base sólida
+// Mantenemos la configuración base
 const paddle = { 
     base: isMobile ? 150 : 120, 
     width: isMobile ? 150 : 120, 
     height: 15, x: 340, y: 460, 
-    baseSpeed: 10, // Velocidad base normal
+    baseSpeed: 10, 
     color: "#00e5ff" 
 };
 
@@ -257,10 +257,9 @@ function update() {
 
     const isHardLevel = [4, 6, 8, 10].includes(level);
 
-    // LÓGICA DE VELOCIDAD DE LA BARRA LIGADA A LA PELOTA
-    // Calculamos la velocidad de la barra: base + bono por nivel + multiplicador dinámico
-    let currentPaddleSpeed = (paddle.baseSpeed + (level * 0.5)) * speedMultiplier;
-    if (isHardLevel) currentPaddleSpeed *= 1.3; // 30% extra de velocidad en niveles hard
+    // MODIFICACIÓN PASO 1: Velocidad de barra fija (Nivel 1: 10 + 0.5)
+    // Se elimina la dependencia de speedMultiplier y de isHardLevel
+    const constantPaddleSpeed = 14;
 
     balls.forEach(b => {
         if (b.stuck) {
@@ -268,6 +267,7 @@ function update() {
             b.y = paddle.y - b.r;
             if (right || left || (isMobile && Math.abs(targetX - paddle.x) > 2)) {
                 b.stuck = false;
+                // La pelota sí mantiene su lógica de escala de dificultad
                 const baseSpeed = isHardLevel ? (isMobile ? 4.2 : 5.8) : (isMobile ? 2.8 : 3.8);
                 const levelBonus = (1 + (level - 1) * 0.08); 
                 
@@ -279,12 +279,13 @@ function update() {
     });
 
     if (isMobile) {
-        // En móvil, la respuesta es proporcional a la velocidad calculada
-        let followSharpness = isHardLevel ? 0.35 : 0.25;
+        // En móvil, la respuesta al toque es constante
+        let followSharpness = 0.25; 
         paddle.x += (targetX - paddle.x) * followSharpness;
     } else {
-        if (right && paddle.x + paddle.width < canvas.width) paddle.x += currentPaddleSpeed;
-        if (left && paddle.x > 0) paddle.x -= currentPaddleSpeed;
+        // En PC, usamos la velocidad constante del Nivel 1
+        if (right && paddle.x + paddle.width < canvas.width) paddle.x += constantPaddleSpeed;
+        if (left && paddle.x > 0) paddle.x -= constantPaddleSpeed;
     }
     paddle.x = Math.max(0, Math.min(canvas.width - paddle.width, paddle.x));
 
@@ -304,7 +305,6 @@ function update() {
             b.sy = -Math.abs(b.sy);
             
             score++; 
-            // Aceleración dinámica
             speedMultiplier += isHardLevel ? 0.025 : 0.015; 
             updateHUD();
             
