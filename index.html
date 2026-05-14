@@ -257,8 +257,6 @@ function update() {
 
     const isHardLevel = [4, 6, 8, 10].includes(level);
 
-    // MODIFICACIÓN PASO 1: Velocidad de barra fija (Nivel 1: 10 + 0.5)
-    // Se elimina la dependencia de speedMultiplier y de isHardLevel
     const constantPaddleSpeed = 14;
 
     balls.forEach(b => {
@@ -268,7 +266,7 @@ function update() {
             if (right || left || (isMobile && Math.abs(targetX - paddle.x) > 2)) {
                 b.stuck = false;
                 // La pelota sí mantiene su lógica de escala de dificultad
-                const baseSpeed = isHardLevel ? (isMobile ? 4.2 : 5.8) : (isMobile ? 2.8 : 3.8);
+                const baseSpeed = isHardLevel ? 5.8 : 3.8;
                 const levelBonus = (1 + (level - 1) * 0.08); 
                 
                 const speed = baseSpeed * levelBonus;
