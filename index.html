@@ -265,7 +265,6 @@ function update() {
             b.y = paddle.y - b.r;
             if (right || left || (isMobile && Math.abs(targetX - paddle.x) > 2)) {
                 b.stuck = false;
-                // La pelota sí mantiene su lógica de escala de dificultad
                 const baseSpeed = isHardLevel ? 5.8 : 4.2;
                 const levelBonus = (1 + (level - 1) * 0.08); 
                 
@@ -277,11 +276,9 @@ function update() {
     });
 
     if (isMobile) {
-        // En móvil, la respuesta al toque es constante
         let followSharpness = 0.25; 
         paddle.x += (targetX - paddle.x) * followSharpness;
     } else {
-        // En PC, usamos la velocidad constante del Nivel 1
         if (right && paddle.x + paddle.width < canvas.width) paddle.x += constantPaddleSpeed;
         if (left && paddle.x > 0) paddle.x -= constantPaddleSpeed;
     }
@@ -384,13 +381,24 @@ function draw() {
             let b = bricks[c][r];
             if (b.status) {
                 ctx.save();
+                
+                // --- CAMBIO APLICADO AQUÍ ---
                 if (b.hits === 2) {
-                    ctx.filter = "contrast(1.5) brightness(1.2)";
-                    ctx.shadowBlur = 5;
-                    ctx.shadowColor = "#fff";
+                    if (!isMobile) {
+                        // En PC mantenemos el filtro de brillo y contraste
+                        ctx.filter = "contrast(1.5) brightness(1.2)";
+                        ctx.shadowBlur = 5;
+                        ctx.shadowColor = "#fff";
+                    } else {
+                        // En móvil usamos un borde blanco sólido para evitar LAG
+                        ctx.strokeStyle = "#ffffff";
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(b.x, b.y, config.w, config.h);
+                    }
                 } else if (b.initialHits === 2 && b.hits === 1) {
                     ctx.globalAlpha = 0.4;
                 }
+                
                 ctx.drawImage(level >= 3 ? lvl3Img : wallImg, b.x, b.y, config.w, config.h);
                 ctx.restore();
             }
