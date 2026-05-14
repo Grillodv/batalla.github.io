@@ -108,7 +108,22 @@
             content:"";position:absolute;inset:0;background:url("Images/boton_base.png") no-repeat center;background-size:contain;z-index:-1;
         }
 
-        /* Estilo para el input de nombre en Game Over */
+        /* --- ESTILO LIMPIO PARA BOTÓN GUARDAR (SIN TEXTURA) --- */
+        #saveBtn {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            color: #ffffff; /* Blanco por defecto */
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 10px;
+            transition: transform 0.2s;
+        }
+        #saveBtn::before { content: none !important; } /* Elimina boton_base.png */
+        #saveBtn:hover { transform: scale(1.1); }
+
         #playerName {
             padding: 10px;
             border-radius: 5px;
@@ -131,12 +146,13 @@
     </div>
 </div>
 
-
 <div class="menu" id="gameOverScreen" style="display:none">
     <div class="menu-buttons" style="background-image: url('Images/game_over.png');">
-        <p style="color: #b80c06; font-weight: bold;">Puntaje Final: <span id="finalScoreText">0</span></p>
-        <input type="text" id="playerName" placeholder="Tu Nombre" maxlength="10">
-        <button class="menu-btn" id="saveBtn"><span>GUARDAR</span></button>
+        <!-- Pantalla limpia: solo input y botón de texto -->
+        <div style="margin-top: 150px; display: flex; flex-direction: column; gap: 15px; align-items: center;">
+            <input type="text" id="playerName" placeholder="Tu Nombre" maxlength="10">
+            <button id="saveBtn">GUARDAR</button>
+        </div>
     </div>
 </div>
 
@@ -185,7 +201,6 @@ const ui = {
     lvlUpScn: $("levelUpScreen"), lvlUpTxt: $("levelUpText"),
     lvlContBtn: $("levelContinueBtn"),
     gameOverScn: $("gameOverScreen"), 
-    finalScore: $("finalScoreText"),
     saveBtn: $("saveBtn"),
     playerName: $("playerName")
 };
@@ -325,12 +340,8 @@ function update() {
             score++; 
             speedMultiplier += isHardLevel ? 0.025 : 0.015; 
             updateHUD();
-            
             popSnd.currentTime = 0; popSnd.play().catch(()=>{});
-            
-            // --- CAMBIO: VIDA CADA 6 PUNTOS ---
             if (score % 6 === 0) powerups.push({ x: Math.random() * 700 + 50, y: -50, type: "extraLife" });
-            
             nextLevel();
         }
 
@@ -365,10 +376,8 @@ function update() {
             speedMultiplier = 1; 
             updateHUD();
             
-            // --- CAMBIO: PANTALLA GAME OVER CON IMAGEN ---
             if (lives <= 0) {
                 started = false;
-                ui.finalScore.innerText = score;
                 ui.gameOverScn.style.display = "flex";
             } else if (balls.length === 0) balls.push(resetBall());
         }
@@ -457,7 +466,6 @@ createBricks();
 balls = [resetBall()];
 updateHUD();
 
-// Eventos de botones
 ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coinSnd.play().catch(()=>{}); };
 
 ui.saveBtn.onclick = () => {
@@ -487,7 +495,6 @@ ui.records.onclick = () => {
 
 $("backBtn").onclick = () => { $("recordsScreen").style.display = "none"; ui.menu.style.display = "flex"; };
 
-// Controles
 addEventListener("keydown", e => { if (e.key === "ArrowRight") right = true; if (e.key === "ArrowLeft") left = true; });
 addEventListener("keyup", e => { if (e.key === "ArrowRight") right = false; if (e.key === "ArrowLeft") left = false; });
 canvas.addEventListener("touchmove", e => {
