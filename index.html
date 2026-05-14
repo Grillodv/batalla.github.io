@@ -107,6 +107,19 @@
         .menu-btn::before, .back-btn::before, .level-display::before{
             content:"";position:absolute;inset:0;background:url("Images/boton_base.png") no-repeat center;background-size:contain;z-index:-1;
         }
+
+        /* Estilo para el input de nombre en Game Over */
+        #playerName {
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px solid #00e5ff;
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            text-align: center;
+            width: 180px;
+            font-family: inherit;
+            outline: none;
+        }
     </style>
 </head>
 <body>
@@ -115,6 +128,15 @@
     <div class="menu-buttons">
         <button class="menu-btn" id="playBtn"><img src="Images/iniciar.png" width="20"> <span>INICIAR</span></button>
         <button class="menu-btn" id="recordsBtn"><img src="Images/copa.png" width="20"> <span>RECORDS</span></button>
+    </div>
+</div>
+
+
+<div class="menu" id="gameOverScreen" style="display:none">
+    <div class="menu-buttons" style="background-image: url('Images/game_over.png');">
+        <p style="color: #b80c06; font-weight: bold;">Puntaje Final: <span id="finalScoreText">0</span></p>
+        <input type="text" id="playerName" placeholder="Tu Nombre" maxlength="10">
+        <button class="menu-btn" id="saveBtn"><span>GUARDAR</span></button>
     </div>
 </div>
 
@@ -161,7 +183,11 @@ const ui = {
     list: $("recordsList"), score: $("score"), lives: $("lives"),
     life: $("lifeBar"), level: $("levelText"),
     lvlUpScn: $("levelUpScreen"), lvlUpTxt: $("levelUpText"),
-    lvlContBtn: $("levelContinueBtn")
+    lvlContBtn: $("levelContinueBtn"),
+    gameOverScn: $("gameOverScreen"), 
+    finalScore: $("finalScoreText"),
+    saveBtn: $("saveBtn"),
+    playerName: $("playerName")
 };
 
 let score = 0, lives = 5, maxLives = 5, level = 1, nextScore = 15;
@@ -173,7 +199,6 @@ let speedMultiplier = 1;
 
 const colors = ["#ffbf00", "#00e5ff", "#ff3b3b", "#8a2be2", "#00ff99", "#ff66cc"];
 
-// Mantenemos la configuración base
 const paddle = { 
     base: isMobile ? 150 : 120, 
     width: isMobile ? 150 : 120, 
@@ -256,7 +281,6 @@ function update() {
     if (!started || changingLevel) return;
 
     const isHardLevel = [4, 6, 8, 10].includes(level);
-
     const constantPaddleSpeed = 14;
 
     balls.forEach(b => {
@@ -265,9 +289,8 @@ function update() {
             b.y = paddle.y - b.r;
             if (right || left || (isMobile && Math.abs(targetX - paddle.x) > 2)) {
                 b.stuck = false;
-                const baseSpeed = isHardLevel ? 5.8 : 4.2;
+                const baseSpeed = isHardLevel ? 5.2 : 4.2;
                 const levelBonus = (1 + (level - 1) * 0.08); 
-                
                 const speed = baseSpeed * levelBonus;
                 b.sx = speed * (Math.random() > 0.5 ? 1 : -1);
                 b.sy = -speed;
@@ -304,7 +327,10 @@ function update() {
             updateHUD();
             
             popSnd.currentTime = 0; popSnd.play().catch(()=>{});
-            if (score % 10 === 0) powerups.push({ x: Math.random() * 700 + 50, y: -50, type: "extraLife" });
+            
+            // --- CAMBIO: VIDA CADA 6 PUNTOS ---
+            if (score % 6 === 0) powerups.push({ x: Math.random() * 700 + 50, y: -50, type: "extraLife" });
+            
             nextLevel();
         }
 
@@ -338,10 +364,12 @@ function update() {
             lives--; 
             speedMultiplier = 1; 
             updateHUD();
+            
+            // --- CAMBIO: PANTALLA GAME OVER CON IMAGEN ---
             if (lives <= 0) {
-                let n = prompt("FIN DEL JUEGO\nNombre:") || "Piloto";
-                saveRecord(n, score);
-                location.reload();
+                started = false;
+                ui.finalScore.innerText = score;
+                ui.gameOverScn.style.display = "flex";
             } else if (balls.length === 0) balls.push(resetBall());
         }
     }
@@ -381,24 +409,17 @@ function draw() {
             let b = bricks[c][r];
             if (b.status) {
                 ctx.save();
-                
-                // --- CAMBIO APLICADO AQUÍ ---
                 if (b.hits === 2) {
                     if (!isMobile) {
-                        // En PC mantenemos el filtro de brillo y contraste
                         ctx.filter = "contrast(1.5) brightness(1.2)";
-                        ctx.shadowBlur = 5;
-                        ctx.shadowColor = "#fff";
+                        ctx.shadowBlur = 5; ctx.shadowColor = "#fff";
                     } else {
-                        // En móvil usamos un borde blanco sólido para evitar LAG
-                        ctx.strokeStyle = "#ffffff";
-                        ctx.lineWidth = 2;
+                        ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 2;
                         ctx.strokeRect(b.x, b.y, config.w, config.h);
                     }
                 } else if (b.initialHits === 2 && b.hits === 1) {
                     ctx.globalAlpha = 0.4;
                 }
-                
                 ctx.drawImage(level >= 3 ? lvl3Img : wallImg, b.x, b.y, config.w, config.h);
                 ctx.restore();
             }
@@ -408,8 +429,7 @@ function draw() {
     powerups.forEach(p => {
         ctx.save();
         if (p.type === "extraLife") {
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = "#FFD700";
+            ctx.shadowBlur = 15; ctx.shadowColor = "#FFD700";
             ctx.filter = "brightness(1.2) saturate(1.5)";
         }
         ctx.drawImage(cometImg, p.x, p.y, 40, 40);
@@ -437,16 +457,14 @@ createBricks();
 balls = [resetBall()];
 updateHUD();
 
+// Eventos de botones
 ui.play.onclick = () => { ui.menu.style.display = "none"; started = true; coinSnd.play().catch(()=>{}); };
-addEventListener("keydown", e => { if (e.key === "ArrowRight") right = true; if (e.key === "ArrowLeft") left = true; });
-addEventListener("keyup", e => { if (e.key === "ArrowRight") right = false; if (e.key === "ArrowLeft") left = false; });
 
-canvas.addEventListener("touchmove", e => {
-    const rect = canvas.getBoundingClientRect();
-    const scX = canvas.width / rect.width;
-    targetX = (e.touches[0].clientX - rect.left) * scX - paddle.width / 2;
-    e.preventDefault();
-}, { passive: false });
+ui.saveBtn.onclick = () => {
+    let name = ui.playerName.value.trim() || "Piloto";
+    saveRecord(name, score);
+    location.reload();
+};
 
 function saveRecord(n, s) {
     let r = JSON.parse(localStorage.getItem("records")) || [];
@@ -466,7 +484,18 @@ ui.records.onclick = () => {
         ui.list.appendChild(li);
     });
 };
+
 $("backBtn").onclick = () => { $("recordsScreen").style.display = "none"; ui.menu.style.display = "flex"; };
+
+// Controles
+addEventListener("keydown", e => { if (e.key === "ArrowRight") right = true; if (e.key === "ArrowLeft") left = true; });
+addEventListener("keyup", e => { if (e.key === "ArrowRight") right = false; if (e.key === "ArrowLeft") left = false; });
+canvas.addEventListener("touchmove", e => {
+    const rect = canvas.getBoundingClientRect();
+    const scX = canvas.width / rect.width;
+    targetX = (e.touches[0].clientX - rect.left) * scX - paddle.width / 2;
+    e.preventDefault();
+}, { passive: false });
 
 loop();
 </script>
